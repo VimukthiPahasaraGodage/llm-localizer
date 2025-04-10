@@ -28,9 +28,9 @@ class PromptTemplate:
     @staticmethod
     def get_prompt_template_part_1(llm_model: Enum):
         match llm_model:
-            case LLMModels.DEEPSEEK_CODER_V1_BASE_67B:
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B:
                 return PromptTemplate.deepseek_coder_v1_part_1
-            case LLMModels.DEEPSEEK_CODER_V1_BASE_33B:
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
                 return PromptTemplate.deepseek_coder_v1_part_1
             case LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
                 return PromptTemplate.deepseek_coder_v2_part_1
@@ -64,9 +64,9 @@ class PromptTemplate:
     @staticmethod
     def get_prompt_template_part_2(llm_model: Enum):
         match llm_model:
-            case LLMModels.DEEPSEEK_CODER_V1_BASE_67B:
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B:
                 return PromptTemplate.deepseek_coder_v1_part_2
-            case LLMModels.DEEPSEEK_CODER_V1_BASE_33B:
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
                 return PromptTemplate.deepseek_coder_v1_part_2
             case LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
                 return PromptTemplate.deepseek_coder_v2_part_2
