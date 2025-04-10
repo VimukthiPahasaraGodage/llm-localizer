@@ -24,8 +24,8 @@ class Driver:
         self.post_code_part = post_code_part
 
         self.df_path = f"{self.cwd}/{self.dataset_path}/{self.dataset_name}/{self.dataset_version}/{self.dataset_name}.csv"
-        self.standardize_df()
         self.df = pd.read_csv(self.df_path)
+        self.standardize_df()
 
         self.llm_model = llm_model
         self.llm_info = LLMInfo(self.llm_model)
@@ -54,6 +54,7 @@ class Driver:
         if 'index' not in self.df.columns:
             self.df['index'] = range(0, len(self.df))  # Starts from 0
             self.df = self.df[['index'] + self.df.columns[:-1].tolist()]  # move 'index' column to front
+            any_change = True
         else:
             print("Index column already present in that provided dataset!")
 
