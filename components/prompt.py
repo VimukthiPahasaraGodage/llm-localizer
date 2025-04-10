@@ -195,7 +195,7 @@ class Prompt:
         tokenized_prompt_token_list = [tokenized_prompt_part_1, tokenized_code, tokenized_prompt_part_2]
         tokenized_prompt = torch.cat(tokenized_prompt_token_list, dim=0)
 
-        if tokenized_prompt.dim() != 0 or tokenized_prompt.shape[0] != (
+        if tokenized_prompt.dim() != 1 or tokenized_prompt.shape[0] != (
                 tokenized_prompt_part_1_length + tokenized_prompt_part_2_length + total_tokens_in_code):
             raise Exception("Number of dimensions in tokenized prompt is not 1 or the total number of tokens mismatch!")
 

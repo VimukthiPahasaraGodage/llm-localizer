@@ -1,6 +1,7 @@
 from enum import Enum
 import pandas as pd
 import os
+from tqdm import tqdm
 
 import torch
 
@@ -48,7 +49,7 @@ class Driver:
 
     def __create_prompts(self):
         prompts = {}
-        for index, row in self.df.iterrows():
+        for index, row in tqdm(self.df.iterrows(), total=len(self.df), desc="Creating prompts"):
             try:
                 prompt = Prompt(self.pre_code_part, row['source_code'], self.post_code_part, self.llm_model)
                 if prompt.prompt_processed:
@@ -58,7 +59,6 @@ class Driver:
         return prompts
 
     def save_tensors_and_info(self):
-        print("Creating prompts...")
         prompts = self.__create_prompts()
 
         indices = list(prompts.keys())
@@ -66,8 +66,7 @@ class Driver:
 
         rows = []
 
-        print("Saving data...")
-        for index in indices:
+        for index in tqdm(indices, desc="Saving tensors"):
             pt = prompts[index]
 
             prompt = pt.get_prompt()
