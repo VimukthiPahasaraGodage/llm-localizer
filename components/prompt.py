@@ -159,6 +159,8 @@ class Prompt:
                 self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0].item(), 151646)
                 tokenizer_output = tokenizer_output[1:]
 
+            if tokenizer_output.dim() == 0:
+                tokenizer_output = tokenizer_output.unsqueeze(0)
             tokenized_lines.append(tokenizer_output)  # Append tokenized output of each line
 
         line_split_lengths = []
