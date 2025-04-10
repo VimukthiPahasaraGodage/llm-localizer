@@ -4,7 +4,7 @@ from enum import Enum
 import torch
 from transformers import AutoModelForCausalLM
 
-from components.llm_utils import LLMInfo
+from components.llm_utils import LLMInfo, LLMModels
 
 
 class LLM:
@@ -33,6 +33,8 @@ class LLM:
         self.model.eval()
 
     def get_and_save_last_hidden_states(self):
+        self.__init_model() # initialize the LLM model and load to GPU
+
         files = [f for f in os.listdir(self.token_tensors_path) if
                  os.path.isfile(os.path.join(self.token_tensors_path, f))]
         tensor_files = []
@@ -48,13 +50,13 @@ class LLM:
             index = int(file.split('.')[0])
             if token_ids.dim() == 1 and token_ids.shape[0] <= self.llm_info.max_allowed_context_length:
                 try:
-                    self.get_last_hidden_states(token_ids, index)
+                    self.__get_last_hidden_states(token_ids, index)
                 except Exception as e:
                     print(f"Exception occurred for index: {index}. Error: {e}")
             else:
                 print(f"The file '{file}' contains a tensor not matching the standards!")
 
-    def get_last_hidden_states(self, token_ids: torch.tensor, index: int):
+    def __get_last_hidden_states(self, token_ids: torch.tensor, index: int):
         token_ids = token_ids.to(self.device)
         token_ids = token_ids.unsqueeze()
 
@@ -79,3 +81,7 @@ class LLM:
         else:
             raise Exception(
                 f"Something went wrong for index: {index}. Number of dimensions is not 3 or batch size is not 1 or the hidden size mismatch!")
+
+if __name__ == '__main__':
+    llm = LLM('data/tensors', 'v1', 'solidity', 'prompt', LLMModels.CODEGEN_350M_MULTI, 'cuda:0')
+    llm.get_and_save_last_hidden_states()
