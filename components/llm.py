@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+import pandas as pd
 
 import torch
 from tqdm import tqdm
@@ -23,6 +24,9 @@ class LLM:
         self.device = device
 
         self.model = None
+
+        self.df_path = f'{self.cwd}/{self.tensor_path}/{self.dataset_name}/{self.dataset_version}/{self.llm_model.value}/tokenizer/{self.dataset_name}.csv'
+        self.df = pd.read_csv(self.df_path)
 
         self.token_tensors_path = f'{self.cwd}/{self.tensor_path}/{self.dataset_name}/{self.dataset_version}/{self.llm_model.value}/tokenizer/{self.tokens_type}'
         self.save_path = f'{self.cwd}/{self.tensor_path}/{self.dataset_name}/{self.dataset_version}/{self.llm_model.value}/last_hidden_state/{self.tokens_type}'
@@ -49,20 +53,33 @@ class LLM:
         for file in tqdm(tensor_files, desc="Inferencing"):
             token_ids = torch.load(f'{self.token_tensors_path}/{file}')
             index = int(file.split('.')[0])
+
+            df_row = self.df[self.df['index'] == index]
+            if df_row.shape[0] != 1:
+                print(f"There are rows that match the same index in the dataframe! Index: {index}")
+                continue
+
+            prompt_token_length = df_row.iloc[0]['prompt_tokens_length']
+
             if token_ids.dim() == 1 and token_ids.shape[0] <= self.llm_info.max_allowed_context_length:
                 try:
-                    self.__get_last_hidden_states(token_ids, index)
+                    self.__get_last_hidden_states(token_ids, index, prompt_token_length)
                 except Exception as e:
                     print(f"Exception occurred for index: {index}. Error: {e}")
             else:
                 print(f"The file '{file}' contains a tensor not matching the standards!")
 
-    def __get_last_hidden_states(self, token_ids: torch.tensor, index: int):
+    def __get_last_hidden_states(self, token_ids: torch.tensor, index: int, prompt_token_length: int):
         token_ids = token_ids.to(self.device)
         token_ids = token_ids.unsqueeze(0)
 
+        attention_mask = torch.cat([
+            torch.ones(prompt_token_length),
+            torch.zeros(self.llm_info.max_allowed_context_length - prompt_token_length)
+        ], dim=0).to(self.device)
+
         with torch.no_grad():
-            outputs = self.model(input_ids=token_ids, output_hidden_states=True)
+            outputs = self.model(input_ids=token_ids, attention_mask=attention_mask, output_hidden_states=True)
 
         all_hidden_states = outputs.hidden_states
         last_hidden_state = all_hidden_states[-1]
