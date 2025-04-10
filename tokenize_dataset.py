@@ -11,7 +11,7 @@ from components.prompt import Prompt
 
 class Driver:
     def __init__(self, tensor_path: str, dataset_path: str, dataset_version: str, dataset_name: str, llm_model: Enum,
-                 pre_code_part: str, post_code_part: str):
+                 pre_code_part: str, post_code_part: str, standardize_df=False):
         self.cwd = os.getcwd()
 
         self.tensor_path = tensor_path
@@ -24,8 +24,9 @@ class Driver:
         self.post_code_part = post_code_part
 
         self.df_path = f"{self.cwd}/{self.dataset_path}/{self.dataset_name}/{self.dataset_version}/{self.dataset_name}.csv"
+        if standardize_df:
+            self.standardize_df()
         self.df = pd.read_csv(self.df_path)
-        self.standardize_df()
 
         self.llm_model = llm_model
         self.llm_info = LLMInfo(self.llm_model)
@@ -41,25 +42,11 @@ class Driver:
         self.create_and_save_tensors()
 
     def standardize_df(self):
-        any_change = False
-
-        unnamed_columns = [col for col in self.df.columns if "Unnamed" in str(col) or str(col).strip() == ""]
-        if unnamed_columns:
-            column_names = ['source_code', 'vuln_lines']
-            self.df = pd.read_csv(self.df_path, header=None, names=column_names)
-            any_change = True
-        else:
-            print("All columns are named properly in the provided dataset!")
-
-        if 'index' not in self.df.columns:
-            self.df['index'] = range(0, len(self.df))  # Starts from 0
-            self.df = self.df[['index'] + self.df.columns[:-1].tolist()]  # move 'index' column to front
-            any_change = True
-        else:
-            print("Index column already present in that provided dataset!")
-
-        if any_change:
-            self.df.to_csv(self.df_path, index=False)
+        column_names = ['source_code', 'vuln_lines']
+        df = pd.read_csv(self.df_path, header=None, names=column_names)
+        df['index'] = range(0, len(df))  # Starts from 0
+        df = df[['index'] + df.columns[:-1].tolist()]  # move 'index' column to front
+        df.to_csv(self.df_path, index=False)
 
     def create_and_save_tensors(self):
         new_rows = []
@@ -97,4 +84,4 @@ if __name__ == '__main__':
     pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
     post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
     driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.CODEGEN_350M_MULTI, pre_code_part,
-                    post_code_part)
+                    post_code_part, True)
