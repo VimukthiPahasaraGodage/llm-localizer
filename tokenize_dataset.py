@@ -11,7 +11,7 @@ from components.prompt import Prompt
 
 class Driver:
     def __init__(self, tensor_path: str, dataset_path: str, dataset_version: str, dataset_name: str, llm_model: Enum,
-                 pre_code_part: str, post_code_part: str, standardize_df=False):
+                 pre_code_part: str, post_code_part: str):
         self.cwd = os.getcwd()
 
         self.tensor_path = tensor_path
