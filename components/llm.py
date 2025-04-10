@@ -59,10 +59,10 @@ class LLM:
 
     def __get_last_hidden_states(self, token_ids: torch.tensor, index: int):
         token_ids = token_ids.to(self.device)
-        token_ids = token_ids.unsqueeze()
+        token_ids = token_ids.unsqueeze(0)
 
         with torch.no_grad():
-            outputs = self.model(**token_ids, output_hidden_states=True)
+            outputs = self.model(input_ids=token_ids, output_hidden_states=True)
 
         all_hidden_states = outputs.hidden_states
         last_hidden_state = all_hidden_states[-1]
