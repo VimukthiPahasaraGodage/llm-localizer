@@ -189,6 +189,23 @@ class Prompt:
         tokenized_prompt_part_1 = tokenized_prompt_part_1.squeeze()
         tokenized_prompt_part_2 = tokenized_prompt_part_2.squeeze()
 
+        if self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B or self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1, 32013)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2, 32013)
+            tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
+        elif self.llm_model == LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1, 100000)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2, 100000)
+            tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
+        elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B:
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1, 128000)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2, 128000)
+            tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
+        elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B or self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_32B:
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1, 151646)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2, 151646)
+            tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
+
         tokenized_prompt_part_1_length = tokenized_prompt_part_1.shape[0]
         tokenized_prompt_part_2_length = tokenized_prompt_part_2.shape[0]
 

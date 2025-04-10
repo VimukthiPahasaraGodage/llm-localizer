@@ -31,7 +31,7 @@ class Driver:
         self.llm_info = LLMInfo(self.llm_model)
 
         # Initialize folders and files for tensors and datasets
-        self.save_path = f'{self.cwd}/{self.tensor_path}/{self.dataset_name}/{self.dataset_version}/{self.llm_model}/tokenizer'
+        self.save_path = f'{self.cwd}/{self.tensor_path}/{self.dataset_name}/{self.dataset_version}/{self.llm_model.value}/tokenizer'
         os.makedirs(self.save_path, exist_ok=True)
         self.save_path_prompt = f'{self.save_path}/prompt'
         os.makedirs(self.save_path_prompt, exist_ok=True)
@@ -93,9 +93,44 @@ class Driver:
         print("Finished!")
 
 if __name__ == '__main__':
+    # print("Codegen")
+    # pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
+    # post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
+    # driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.CODEGEN_350M_MULTI, pre_code_part, post_code_part, True)
+
+    print("\n\nDeepseek Coder v1\n=============================================")
     pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
     post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
-    driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.CODEGEN_350M_MULTI, pre_code_part, post_code_part, True)
+    driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B, pre_code_part,
+                    post_code_part, True)
+
+    print("\n\nDeepseek Coder v2\n=============================================")
+    pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
+    post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
+    driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B,
+                    pre_code_part,
+                    post_code_part, True)
+
+    print("\n\nQwen Coder\n=============================================")
+    pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
+    post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
+    driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.QWEN_25_CODER_INSTRUCT_GPTQ_INT8_14B,
+                    pre_code_part,
+                    post_code_part, True)
+
+    # print("\n\nDeepseek R1 Qwen\n=============================================")
+    # pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
+    # post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
+    # driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B,
+    #                 pre_code_part,
+    #                 post_code_part, True)
+    #
+    # print("\n\nQwen Coder\n=============================================")
+    # pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
+    # post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
+    # driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B,
+    #                 pre_code_part,
+    #                 post_code_part, True)
 
 
 
