@@ -147,16 +147,16 @@ class Prompt:
             tokenizer_output = tokenizer_output.squeeze()
 
             if self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B or self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
-                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0], 32013)
+                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0].item(), 32013)
                 tokenizer_output = tokenizer_output[1:]
             elif self.llm_model == LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
-                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0], 100000)
+                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0].item(), 100000)
                 tokenizer_output = tokenizer_output[1:]
             elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B:
-                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0], 128000)
+                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0].item(), 128000)
                 tokenizer_output = tokenizer_output[1:]
             elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B or self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_32B:
-                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0], 151646)
+                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0].item(), 151646)
                 tokenizer_output = tokenizer_output[1:]
 
             tokenized_lines.append(tokenizer_output)  # Append tokenized output of each line
@@ -190,20 +190,20 @@ class Prompt:
         tokenized_prompt_part_2 = tokenized_prompt_part_2.squeeze()
 
         if self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B or self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
-            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1, 32013)
-            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2, 32013)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1[0].item(), 32013)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2[0].item(), 32013)
             tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
         elif self.llm_model == LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
-            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1, 100000)
-            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2, 100000)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1[0].item(), 100000)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2[0].item(), 100000)
             tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
         elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B:
-            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1, 128000)
-            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2, 128000)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1[0].item(), 128000)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2[0].item(), 128000)
             tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
         elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B or self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_32B:
-            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1, 151646)
-            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2, 151646)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1[0].item(), 151646)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2[0].item(), 151646)
             tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
 
         tokenized_prompt_part_1_length = tokenized_prompt_part_1.shape[0]
