@@ -98,11 +98,11 @@ if __name__ == '__main__':
     # post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
     # driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.CODEGEN_350M_MULTI, pre_code_part, post_code_part, True)
 
-    print("\n\nDeepseek Coder v1\n=============================================")
-    pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
-    post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
-    driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B, pre_code_part,
-                    post_code_part, True)
+    # print("\n\nDeepseek Coder v1\n=============================================")
+    # pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
+    # post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
+    # driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B, pre_code_part,
+    #                 post_code_part, True)
 
     print("\n\nDeepseek Coder v2\n=============================================")
     pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
