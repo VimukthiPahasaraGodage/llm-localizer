@@ -169,6 +169,9 @@ class Prompt:
             line_split_lengths.append(line.shape[0])
             total_tokens_in_code += line.shape[0]
 
+        if len(split_code) != len(line_split_lengths):
+            raise Exception("Number of items in line_split_lengths not equal to number of lines in the code")
+
         tokenized_code = torch.cat(tokenized_lines, dim=0)
         if tokenized_code.shape[0] != total_tokens_in_code:
             raise Exception("Total number of tokens mismatch after concatenation.")
