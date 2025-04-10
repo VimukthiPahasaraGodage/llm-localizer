@@ -21,7 +21,7 @@ class Driver:
         self.pre_code_part = pre_code_part
         self.post_code_part = post_code_part
 
-        self.df_path = f"{self.cwd}/{self.dataset_path}/{self.dataset_version}/{self.dataset_name}.csv"
+        self.df_path = f"{self.cwd}/{self.dataset_path}/{self.dataset_name}/{self.dataset_version}/{self.dataset_name}.csv"
         if standardize_df:
             self.standardize_df()
         self.df = pd.read_csv(self.df_path)
@@ -30,7 +30,7 @@ class Driver:
         self.llm_info = LLMInfo(self.llm_model)
 
         # Initialize folders and files for tensors and datasets
-        self.save_path = f'{self.cwd}/{self.tensor_path}/{self.dataset_version}/{self.llm_model}/tokenizer'
+        self.save_path = f'{self.cwd}/{self.tensor_path}/{self.dataset_name}/{self.dataset_version}/{self.llm_model}/tokenizer'
         os.makedirs(self.save_path, exist_ok=True)
         self.save_path_prompt = f'{self.save_path}/prompt'
         os.makedirs(self.save_path_prompt, exist_ok=True)
