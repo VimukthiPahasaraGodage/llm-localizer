@@ -1,0 +1,8 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,Auctionify.sol,0x3a6984181f49c9ef64ada32373e736db0c9f1078,{178},"{173, 174, 175, 176, 177, 178, 179, 180}",,,True,{173},True,post_claude_results_validation_Unprotected_Suicide.pkl
+1,EthVault.sol,0xe78a4ed7a2d50c7206fea45dd7418b71a6de943b,{94},{94},,,False,,False,
+2,GetsBurned.sol,0x2f976a5382c0c6214b3d8fe6bdc5379edd35d9d4,{8},"{8, 9, 6, 7}",,,True,{6},False,post_claude_results_validation_Unprotected_Suicide.pkl
+3,WhoWillRuleWesterosAtTheEnd.sol,0xf2e88e0bfe61e5e41d9317e82c6938e67a913cc1,{207},"{203, 204, 205, 206, 207, 208, 209, 210, 211, 212}",,,True,{203},True,post_claude_results_validation_Unprotected_Suicide.pkl
+4,Promise.sol,0x23e6311dd0eb3556b300404f0cba576d504be223,{95},"{96, 91, 92, 93, 94, 95}",,,True,{91},False,post_claude_results_validation_Unprotected_Suicide.pkl
+5,Lottery4.sol,0x2044c97717a622b4d9462329db2497e69201623a,{67},"{58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124}",,,True,{67},True,post_claude_results_validation_Unprotected_Suicide.pkl
+6,Vault.sol,0x65c52ae9b15dd6f30902e9f8164c91e912ee2be3,{58},{58},,,False,,False,

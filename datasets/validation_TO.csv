@@ -1,0 +1,6 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,Ambassador.sol,0x85f1752fcaf37c45aa77d677e54e94f533c49874,{292},{292},,{292},False,,False,
+1,RCpro.sol,0x5f4d465a294c5e8258beb6a4459f69f933f6f5b1,{652},{652},,{652},False,,False,
+2,TokenSale.sol,0x16b888fa2fc83043c3ad6d6c2780c8248461bb15,{235},{235},,{235},False,,False,
+3,RC.sol,0x5f5a0d2ea029ae476ba804901eb0f1b912220947,{448},{448},,{448},False,,False,
+4,SoccerChampion.sol,0xa342b71ef080fd75a78251aa83d3f5ce80743939,{278},{278},,{278},False,,False,

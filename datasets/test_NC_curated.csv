@@ -1,0 +1,8 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,CrystalReignShard.sol,0x5108e432d40d34a4d0ed88c12e83db0e571bfc75,{220},{221},,{220},True,"{220, 221}",True,post_claude_results_test_Nested_Call.pkl
+1,MultiEthSender.sol,0x11352d75f63804d5f8fdb88bddf9efe9b52d6723,{79},{80},,{79},True,"{80, 79}",True,post_claude_results_test_Nested_Call.pkl
+2,eTrustmoney.sol,0xa5c62860475ce15c5e38a8443ca53f72113c0a5c,{57},{60},,{57},True,"{57, 60}",True,post_claude_results_test_Nested_Call.pkl
+3,Multiplexer.sol,0x7b138cc83ecccd6331cd7651c75ee3eb2ec6682e,{34},{35},,{34},True,{35},True,post_claude_results_test_Nested_Call.pkl
+4,BetCenter.sol,0x35bab7165a301e99c75c3e59b48817856b4d5e5c,{485},{486},,{485},True,"{486, 511}",True,post_claude_results_test_Nested_Call.pkl
+5,BEthy.sol,0x248fda6a145642bd9bba9d5d349164e8ffe933cc,{144},{147},,{144},True,{147},True,post_claude_results_test_Nested_Call.pkl
+6,ChampionSimple.sol,0xbd8dd6d726c3fcdbfa9a1279a98a7320cfe4d800,{244},{245},,{244},True,"{244, 245}",True,post_claude_results_test_Nested_Call.pkl

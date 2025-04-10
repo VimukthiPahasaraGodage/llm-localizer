@@ -1,0 +1,3 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,DEP_BANK.sol,0xaae1f51cf3339f18b6d3f3bdc75a5facd744b0b8,{47},{49},{47},,True,"{49, 47}",True,post_claude_results_test_Reentrancy.pkl
+1,THE_BANK.sol,0xcb6fe98097fe7d6e00415bb6623d5fc3effa4e83,{22},{24},{22},,True,"{24, 22}",True,post_claude_results_test_Reentrancy.pkl

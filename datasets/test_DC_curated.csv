@@ -1,0 +1,2 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,Pair.sol,0x0b3ded1b54e89f8899482cfccf515d525835bc2b,{472},"{472, 473}",,,True,,False,

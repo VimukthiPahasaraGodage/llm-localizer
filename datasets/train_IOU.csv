@@ -1,0 +1,124 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,Gift.sol,0xb91a6c5c6362b10db6440d690e5391bb1eabe591,{14},,{14},,False,,False,
+1,TokenERC20.sol,0xd70e66775a74a9aedeac6e28313e1033cd726552,{441},,{441},,False,,False,
+2,Vault.sol,0x598ab825d607ace3b00d8714c0a141c7ae2e6822,{270},,{270},,False,,False,
+3,Sandstone.sol,0xae3bf0f077ed66dda9fb1b5475942c919ef3bb0d,{14},,{14},,False,,False,
+4,bet1000_001eth.sol,0xab3b0810b839f49c2d619b55f196aae764422e22,{127},,{127},,False,,False,
+5,Auction.sol,0x3280660b3bafdad41a774938ab5a34ae463edbfe,{75},,{75},,False,,False,
+6,MiningToken.sol,0xbac2dc4fe58f1f3382f036b1cb8d92591e0c135f,{107},,{107},,False,,False,
+7,A004.sol,0xcae22909c9dbc37c2f6c2780d1f58decd5d3b1fd,{39},,{41},,True,{41},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+8,EtherFox.sol,0x48e34dd473867d78c4a1304ff28e55150873590d,{74},,{74},,False,,False,
+9,HODL.sol,0x9bdeacb145860075af954de6adbb8ad5b52ceac2,{34},,{34},,False,,False,
+10,Nihilum.sol,0x5f9df71056d7c7530ae75d773bac98cfa887dbd4,{265},,{265},,False,,False,
+11,Distribute.sol,0x84004ca3b679b94d5c27c59d710e8201068bb93b,{13},,{11},,True,{14},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+12,hodlEthereum.sol,0x6ba9908db7340f82e75ac42468b8172dbf37c1d6,{25},,{25},,False,,False,
+13,ITSETH.sol,0xfb9ba5b45ffb009a369fdb5140fd470e7bdcdd66,{62},,{57},,True,{62},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+14,myPreICO.sol,0x35e44051799bd7cea091c4fad2cba9b37e364c5b,{30},,{25},,True,"{50, 51, 30}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+15,CraigHester.sol,0x1d8cd6eab10ab7d673fa7b4c5f93fe167953d4f9,{71},,{71},,False,,False,
+16,BiddingCustom.sol,0xee7477b1c42d173c0791cecf2592f6a8a4c16b0a,{267},,{267},,False,,False,
+17,DungeonCoreBeta.sol,0x141766882733cafa9033e8707548fdcac908db22,{540},,{537},,True,"{481, 482, 483, 709, 710, 711, 537, 463, 466, 690, 693, 568, 473, 700}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+18,GIFT3600.sol,0x7ffc2bd9431b059c509b45b33e77852d47de827d,{14},,{14},,False,,False,
+19,EDCoreVersion1.sol,0xf7ed56c1ac4d038e367a987258b86fc883b960a1,{1070},,{1067},,True,,False,
+20,DoubleEther.sol,0x9d1cbf4ef833340120e721e5028c326ec1066c7e,{376},,{376},,False,,False,
+21,Crowdsale.sol,0x9337651f1dfac7f858d4e08a2da27b001e6af6b8,{133},,{133},,False,,False,
+22,BiddingUnique.sol,0x312cb5dfc8e5414422568d017b475a40a5fc4faf,{373},,{373},,False,,False,
+23,Random.sol,0x80406b7d3b9189968e3499d4f69cb015ae6f4b96,{173},,{173},,False,,False,
+24,MyToken.sol,0x44977767dfe24dc8a95ff0affb48a3871312bccf,{69},,{69},,False,,False,
+25,UserfeedsClaimWithConfigurableTokenMultiTransfer.sol,0xecbed48098c4f25a16195c45ddf5fd736e28b14b,{131},,{130},,True,,False,
+26,SaleClockAuction.sol,0x607e87cdc8bf7707c95c2de208256e350a7d3239,{183},,{183},,False,,False,
+27,Vault.sol,0xed29ff5874fa64dcf47ed7dacb770857a5d164fb,{65},,{65},,False,,False,
+28,CaptureTheFlag.sol,0x4d955895c61d6a7a2dc85f2feedbda6489c6f67d,{92},,{92},,False,,False,
+29,RandoLotto.sol,0x954791f9a0f0ff7841cffea32c556ac71168eff8,{27},,{27},,False,,False,
+30,Vault.sol,0x91151abe8cea8ee574b50cc01c18ce36cbba3195,{66},,{66},,False,,False,
+31,ButtonFactory.sol,0x380e0f015c0a830dc5d25e5f99570ad0be275350,{82},,{82},,False,,False,
+32,CapitalPay.sol,0x199fb7016f7635de3924d80087bcb367cd123b51,{57},,{57},,False,,False,
+33,ActionAgonPlat.sol,0xccb15d8b18031c027d6cc51751d77f008fabb345,{210},,{210},,False,,False,
+34,bet_various.sol,0x4caa99bf19a1834bfe87c5552e11a2506e4101e5,{132},,{132},,False,,False,
+35,Lottery.sol,0x7615882d2c0dba1913623c5a4c50fc345723d013,{47},,{47},,False,,False,
+36,WorldCup2018Betsman.sol,0x3978fa77d9c4ba10699120505d4463af9629e39e,{254},,{254},,False,,False,
+37,ParsecPresale.sol,0xdaae09accd32ccdb5d1fe48244d1826f55670704,{234},,{234},,False,,False,
+38,Vault.sol,0x1b1c789fccdfc6a7b1fef651a1464043f0a38ada,{60},,{60},,False,,False,
+39,SafeDeposit.sol,0x3e365d13828c398d1bd1694adce8998fd0139ba3,{66},,{66},,False,,False,
+40,ESmart.sol,0x84cd9cf60bcb44f7bab8b75e6f03614c2c3b22b7,{266},,{262},,True,{262},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+41,AdoreNetwork.sol,0x663a9eba94dad8ca08917549ceb10565dffd5351,{187},,{190},,True,"{140, 141, 175, 177, 180, 186, 187}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+42,SoccerGamblingV_QIU.sol,0xa8ddbe421894b22e5e5be86d9cf9c24f5600b8fe,{602},,{602},,False,,False,
+43,WayBackToken.sol,0xa2cc011e7b1baa8fc99e654e0383b691d884ca47,{60},,{60},,False,,False,
+44,SmartSageMatrix.sol,0x8a219f369793a8497a283f167b6b409f7ebc8eae,{72},,{72},,False,,False,
+45,Slot.sol,0x17d0582dee50a5401bb8f65ac29ec2da50c670ea,{169},,{169},,False,,False,
+46,CrystalDeposit.sol,0xcb8361f6ea2c93a39ffd9e8357ed6ccd48331dea,{316},,{314},,True,,False,
+47,JWCToken.sol,0xf0840466b8ac28ec53fb78561399316a18769f55,{215},,{215},,False,,False,
+48,GameLogic.sol,0x5d84827b41abefd47af454f77227dab4895c47a9,{261},,{261},,False,,False,
+49,MCPSale.sol,0x2c2391f793f4f81475d87fffe366458ce5380a13,{263},,{263},,False,,False,
+50,NaiveSplit.sol,0xb0ebc0f42420dcf301c711f79850b76213fad373,{23},,{19},,True,"{27, 28}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+51,MultiSend.sol,0x410804f20daf6498ec564a20132985b8da401c2e,{29},,{33},,True,{29},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+52,SnailToken.sol,0xf3319a43b922e2ee5c33fb83b8a860344d8279bb,{50},,{50},,False,,False,
+53,FiftyFlip.sol,0xe09b1ab8111c2729a76f16de96bc86a7af837928,{347},,{347},,False,,False,
+54,PowerTokens.sol,0xf65f76961eb6afb81a1b1472d8210229c7005427,{426},,{426},,False,,False,
+55,SML.sol,0x3bcaf56923335062e8f272d011efd2e40fa42147,{56},,{56},,False,,False,
+56,MultiSend.sol,0xc6fb494987cafaeda71a4052da7ff0695ca3998d,{33},,{37},,True,{33},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+57,NumberToken3.sol,0x95411d0acaa34aaaf85c0ea55a8fde2cefb3d610,{114},,{114},,False,,False,
+58,Rainmaker.sol,0x76e5cfba9633a467e77db2587a50c0bec4389ab9,{66},,{64},,True,"{65, 66}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+59,Win20ETH.sol,0x6ac93e04f24b57e7544bce967aedd0f7df50ea0d,{112},,{112},,False,,False,
+60,LynchpinPrivateICO.sol,0x36cce24d6314445c11beb80f99f9f14b5ea9ecc2,{63},,{61},,True,"{195, 196, 197}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+61,GasSiphonWallet.sol,0xfc016cbb9f4196dcb8073db7e33d9ef6cc3ea6e9,{175},,{175},,False,,False,
+62,EthealSplit.sol,0x99d804f479df333ed4d2287af2d4da3eda1b3cd1,{11},,{10},,True,,False,
+63,Superbowl52.sol,0xa4ec44afee34feffbae5ce4218d3c06ebd70455e,{207},,{207},,False,,False,
+64,EasySmart.sol,0x72f41244e09b3b2f09d9e2f5f1184fa8bd6b4a1e,{203},,{203},,False,,False,
+65,RandoLotto.sol,0x6774ff11d7c45052235d052033b4cfd7f8adfb80,{26},,{26},,False,,False,
+66,DivX.sol,0xaa3a6f5bddd02a08c8651f7e285e2bec33ea5e53,{14},,{14},,False,,False,
+67,Send.sol,0xf9e7083fd1ca37db176046ba17cc0fede7fa855d,{16},,{15},,True,,False,
+68,DataEquip.sol,0x4209f9bbb4e4dd48dbd84701fcaaab1d492b5a05,{641},,{642},,True,"{641, 260, 467, 571, 411, 575}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+69,keepMyEther.sol,0xb7c5c5aa4d42967efe906e1b66cb8df9cebf04f7,{14},,{14},,False,,False,
+70,MoralityAI.sol,0xd1b5cb3a6ea812c8c444e8d7d5692905df097c0e,{408},,{408},,False,,False,
+71,UTEMIS.sol,0x78b17cc10c4d34fbf6cb474731f7340e487a5db3,{331},,{331},,False,,False,
+72,asdfgh.sol,0xea2b9ad51d872d3cbf6c5f3ee9614d65a9d58147,{15},,{15},,False,,False,
+73,xcat.sol,0xb8aa8971e9201d183d1dadf5acc5c3f6b3076bc0,{25},,{30},,True,{25},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+74,PiggyBank.sol,0x126ae85a1ebf49dc946224f5268c6bd8338d49ae,{7},,{5},,True,{24},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+75,Distribute.sol,0xf3163e55e521bd49521976d43d82d21a9729dc9d,{12},,{10},,True,"{10, 13}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+76,POWHclone.sol,0x11fc42be8b14aeecfc371af217c4648e6423fa60,{113},,{113},,False,,False,
+77,EthVault.sol,0xc710772a16fd040ed9c63de0679a57410981e3fc,{72},,{72},,False,,False,
+78,Vault.sol,0xf0cc17aa0ce1c6595e56c9c60b19c1c546ade50d,{65},,{65},,False,,False,
+79,StrongHandsManager.sol,0xf4db7690bb4f617ac0f4c29d627722deef093340,{43},,{43},,False,,False,
+80,CrowdsaleLeviusDAO.sol,0x2c8382ca66d5611987b393aa6e39b6a9c406bbd2,{184},,{184},,False,,False,
+81,GSG_official.sol,0x727395b95c90deab2f220ce42615d9dd0f44e187,{1076},,{1076},,False,,False,
+82,TokenICOGAT.sol,0xf165c0df0b759e93e6166aecb667c7ec2a300525,{49},,{49},,False,,False,
+83,FireCasino.sol,0xa025151aee27bedc1518328657888330377291e9,{85},,{85},,False,,False,
+84,ChestMining.sol,0x01b6e3aabe55d9ab81ef306479801448a4ca60c9,{129},,{129},,False,,False,
+85,DataMining.sol,0x7cbc6211e6b065b6ef1b2addf842d0105f7619c7,{176},,{176},,False,,False,
+86,FreedomEthereum.sol,0xc3142db870ce470122f7d2d4d8d76ae5dda51dda,{8},,{8},,False,,False,
+87,airDrop.sol,0xe894d54dca59cb53fe9cbc5155093605c7068220,{8},,{5},,True,{8},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+88,EthReceiver.sol,0xc1d73e148590b60ce9dd42d141f9b27bbad07879,{14},,{14},,False,,False,
+89,RaiseFundsForACause.sol,0x7b74e83cacf86443a1cad1152179cbeff8e25e29,{57},,{53},,True,{95},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+90,TTPresale.sol,0x968815cd73647c3af02a740a2438d6f8219e7534,{467},,{467},,False,,False,
+91,Vault.sol,0xffc80f7403ff8c1aee200ad110fe0fa28d213445,{49},,{49},,False,,False,
+92,NumbersTokenRemake.sol,0xb6fd124ca6eceb00b747947a065f31392eec4572,{113},,{113},,False,,False,
+93,Deposit.sol,0xa16cdcba1d6cb6874ff9fd8a6c8b82a3f834f512,{36},,{36},,False,,False,
+94,CDPCreator.sol,0xdc919494349e803fbd2d4064106944418381edb3,{1024},,{1024},,False,,False,
+95,Vote.sol,0x000000002647e16d9bab9e46604d75591d289277,{71},,{71},,False,,False,
+96,MultiInvest.sol,0x173ee6e41bf96c0a1c58bc4c31699916b10d7ef2,{392},,{392},,False,,False,
+97,LastHero.sol,0x6dbedc242428353601429f29da7bd6eb9c141f1f,{352},,{352},,False,,False,
+98,GasToken2.sol,0x0000000000b3f879cb30fe243b4dfee438691c04,{107},,{107},,False,,False,
+99,contracts/converter/LiquidityPoolV1Converter.sol,0xa2787e3bfd992725183868c40d36137bbc174c3a,{534},,{530},,True,"{534, 535}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+100,BountyHunt.sol,0xb5766f61911f8b520b0e938aae100834aa3048c6,{20},,{20},,False,,False,
+101,TokenERC20.sol,0xee045942b043b92cca0c454a553649eaa80873ea,{119},,{119},,False,,False,
+102,Amp.sol,0x27f97bc09a4e28d5935a08e2810b3e3c94f04220,{158},,{157},,True,"{167, 266, 267, 108, 268, 179, 254, 183, 157, 158, 255}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+103,CryptoCupVirtualMatch.sol,0xf76557d533e7adf2e74a9d9d8b833c73809ba7c1,{401},,{401},,False,,False,
+104,ProofOfLongHodl.sol,0x61ea25cfd1509888211f9e58e82edde74acc59b1,{252},,{252},,False,,False,
+105,Pob.sol,0x9251efccb139465204e3d6e3269a73b212f24a5f,{222},,{222},,False,,False,
+106,Vault.sol,0xcb8d1c16f97f86b4aaa400a50771bc958b9ba116,{35},,{35},,False,,False,
+107,Vault.sol,0xe14f29c22f47d1ca8dda796a6718c6bd0be0b3cf,{71},,{71},,False,,False,
+108,BinaryOption.sol,0xa6a8114712c2eb2fa1807b9577bcb2787c07b78c,{368},,{368},,False,,False,
+109,UserfeedsClaimWithConfigurableValueMultiTransfer.sol,0xfad31a5672fbd8243e9691e8a5f958699cd0aaa9,{131},,{130},,True,"{132, 133, 171, 172, 189, 152, 153, 124, 125, 190}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+110,CrystalShare.sol,0x59a8b4400ebfd61d42d8aade332076c220f72d42,{152},,{150},,True,"{152, 154, 155}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+111,ActionPresell.sol,0xc333228daab9bde8a3866efa3a9e616b7e1bae51,{554},,{555},,True,{643},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+112,BankDeposit.sol,0xc2438ef1d2f2c1427bf0a39f02dba6a4a9de4793,{39},,{39},,False,,False,
+113,contracts/GoBoardMetaDetails.sol,0x34bd7814bfef669936f05e355abd882acfc569b2,{37},,{37},,False,,False,
+114,contracts/GoGameLogic.sol,0x34bd7814bfef669936f05e355abd882acfc569b2,{247},,{248},,True,"{192, 232, 247}",True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+115,SecureDeposit.sol,0x660fcb0834b1293117d472d65186534acf75af4f,{54},,{54},,False,,False,
+116,DeLottery.sol,0x4763768d6938353c9c8849115c58a32142b0f9ea,{221},,{225},,True,{221},True,post_claude_results_train_Integer_Overflow_and_Underflow.pkl
+117,Lottery7.sol,0x1981716911e621d725b835ba0af776e5f9be0bbe,{47},,{47},,False,,False,
+118,Agricoin.sol,0xd42c50dedae71f7ad62e7792e83d7736637689d9,{323},,{323},,False,,False,
+119,Crowdsale.sol,0x610d5ba8e28c0e7ea150e449a9cc57eb616ac36b,{291},,{291},,False,,False,
+120,Draw.sol,0x5ec28acd52fcdb9be4370d13d8fe3879cc9f5c22,{514},,{514},,False,,False,
+121,EtherGuess.sol,0x0684d80292961f6f662a214d52c940232c4dfba1,{284},,{284},,False,,False,
+122,LuckyBar.sol,0x398193d0f35a132b9d8f7252c29d3c269c6f9965,{991},,{991},,False,,False,

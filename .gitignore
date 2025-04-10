@@ -1,0 +1,12 @@
+data/tensors/*
+datasets_v1
+datasets/.ipynb_checkpoints
+datasets/.virtual_documents
+datasets/anaconda_projects
+datasets/processed/.virtual_documents
+datasets/processed/.ipynb_checkpoints
+datasets/processed/anaconda_projects
+datasets/smartbugs-curated/.ipynb_checkpoints
+venv/
+temp/
+.env

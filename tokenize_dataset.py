@@ -1,106 +1,93 @@
-from enum import Enum
-import pandas as pd
-import os
-
-import torch
-
-from components.llm_utils import LLMInfo, LLMModels
-from components.prompt import Prompt
+from components.llm_utils import LLMModels
+from components.prompt import Driver
 
 
-class Driver:
-    def __init__(self, tensor_path: str, dataset_path: str, dataset_version: str, dataset_name: str, llm_model: Enum, pre_code_part: str, post_code_part: str, standardize_df=False):
-        self.cwd = os.getcwd()
-
-        self.tensor_path = tensor_path
-
-        self.dataset_path = dataset_path
-        self.dataset_version = dataset_version
-        self.dataset_name = dataset_name
-
-        self.pre_code_part = pre_code_part
-        self.post_code_part = post_code_part
-
-        self.df_path = f"{self.cwd}/{self.dataset_path}/{self.dataset_version}/{self.dataset_name}.csv"
-        if standardize_df:
-            self.standardize_df()
-        self.df = pd.read_csv(self.df_path)
-
-        self.llm_model = llm_model
-        self.llm_info = LLMInfo(self.llm_model)
-
-        # Initialize folders and files for tensors and datasets
-        self.save_path = f'{self.cwd}/{self.tensor_path}/{self.dataset_version}/{self.llm_model}/tokenizer'
-        os.makedirs(self.save_path, exist_ok=True)
-        self.save_path_prompt = f'{self.save_path}/prompt'
-        os.makedirs(self.save_path_prompt, exist_ok=True)
-        self.save_path_code = f'{self.save_path}/code'
-        os.makedirs(self.save_path_code, exist_ok=True)
-
-        self.save_tensors_and_info()
-
-    def standardize_df(self):
-        column_names = ['source_code', 'vuln_lines']
-        df = pd.read_csv(self.df_path, header=None, names=column_names)
-        df['index'] = range(0, len(df))  # Starts from 0
-        df = df[['index'] + df.columns[:-1].tolist()] # move 'index' column to front
-        df.to_csv(self.df_path, index=False)
-
-    def __create_prompts(self):
-        prompts = {}
-        for index, row in self.df.iterrows():
-            try:
-                prompt = Prompt(self.pre_code_part, row['source_code'], self.post_code_part, self.llm_model)
-                if prompt.prompt_processed:
-                    prompts[row['index']] = prompt
-            except Exception as e:
-                print(f"Exception occurred for index: {index}. Error: {e}")
-        return prompts
-
-    def save_tensors_and_info(self):
-        print("Creating prompts...")
-        prompts = self.__create_prompts()
-
-        indices = list(prompts.keys())
-        indices.sort()
-
-        rows = []
-
-        print("Saving data...")
-        for index in indices:
-            pt = prompts[index]
-
-            prompt = pt.get_prompt()
-            prompt_tokens = pt.get_prompt_tokens()
-            code_tokens = pt.get_code_tokens()
-            line_split_lengths = pt.get_line_split_lengths()
-            code_start_index = pt.get_code_start_index()
-            code_end_index = pt.get_code_end_index()
-
-            rows.append({'index': index,
-                         'line_split_lengths': str(line_split_lengths),
-                         'code_start_index': code_start_index,
-                         'code_end_index': code_end_index,
-                         'prompt_tokens_length': pt.get_prompt_tokens_length(),
-                         'code_tokens_length': pt.get_code_tokens_length(),
-                         'get_line_split_lengths_length': pt.get_line_split_lengths_length(),
-                         'prompt': prompt})
-
-            torch.save(prompt_tokens, f'{self.save_path_prompt}/{index}.pt')
-            torch.save(code_tokens, f'{self.save_path_code}/{index}.pt')
-
-        df = pd.DataFrame(rows)
-        df.to_csv(f'{self.save_path}/{self.dataset_name}.csv')
-        print("Finished!")
-
-if __name__ == '__main__':
-    pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
-    post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
-    driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.CODEGEN_350M_MULTI, pre_code_part, post_code_part, True)
+def run_tokenizing_job(params: dict):
+    try:
+        Driver(tensor_path='data/tensors',
+               dataset_path='data/dataset',
+               dataset_version=params['dataset_version'],
+               dataset_name=params['dataset_name'],
+               llm_model=params['llm_model'],
+               pre_code_part=params['pre_code_part'],
+               post_code_part=params['post_code_part'],
+               standardize_df=False)
+        return f"Finished the execution of the tokenization for dataset: {params['dataset_name']} version: {params['dataset_version']} llm: {params['llm_model'].value}"
+    except Exception as e:
+        return f"Exception occurred during the tokenization for dataset: {params['dataset_name']} version: {params['dataset_version']} llm: {params['llm_model'].value} Error: {e}"
 
 
+job_params = [
+    # defects4j dataset
+    {'dataset_version': 'v2',
+     'dataset_name': 'defects4j',
+     'llm_model': LLMModels.CODEGEN_350M_MULTI,
+     'pre_code_part': "",
+     'post_code_part': ""},
+    {'dataset_version': 'v2',
+     'dataset_name': 'defects4j',
+     'llm_model': LLMModels.CODEGEN_6B_MULTI,
+     'pre_code_part': "",
+     'post_code_part': ""},
+    {'dataset_version': 'v2',
+     'dataset_name': 'defects4j',
+     'llm_model': LLMModels.CODEGEN_16B_MULTI,
+     'pre_code_part': "",
+     'post_code_part': ""},
+    {'dataset_version': 'v2',
+     'dataset_name': 'defects4j',
+     'llm_model': LLMModels.QWEN_QWQ_32B,
+     'pre_code_part': "Analyze the following Java code snippet for security vulnerabilities, bugs, and faulty logic. Identify all problematic lines and explain the risks associated with each.",
+     'post_code_part': ""},
+    {'dataset_version': 'v2',
+     'dataset_name': 'defects4j',
+     'llm_model': LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B,
+     'pre_code_part': "Analyze the following Java code snippet for security vulnerabilities, bugs, and faulty logic. Identify all problematic lines and explain the risks associated with each.",
+     'post_code_part': ""},
+    # solidity dataset
+    {'dataset_version': 'v2',
+     'dataset_name': 'solidity',
+     'llm_model': LLMModels.QWEN_QWQ_32B,
+     'pre_code_part': "Smart contracts written in Solidity language may contain vulnerabilities such as DelegateCall, Arithmetic/Integer Overflow and Underflow, Nested Call, Reentrancy, Timestamp Dependency, TxOrigin, Transaction Order Dependency, Unchecked Call, Unprotected Suicide, Frozen Ether, Bad Randomness, Denial of service, Front Running, Short Address and other vulnerabilities. Analyze the following solidity smart contract for security vulnerabilities, bugs, and faulty logic. Identify all problematic lines and explain the risks associated with each.",
+     'post_code_part': ""},
+    {'dataset_version': 'v2',
+     'dataset_name': 'solidity',
+     'llm_model': LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B,
+     'pre_code_part': "Smart contracts written in Solidity language may contain vulnerabilities such as DelegateCall, Arithmetic/Integer Overflow and Underflow, Nested Call, Reentrancy, Timestamp Dependency, TxOrigin, Transaction Order Dependency, Unchecked Call, Unprotected Suicide, Frozen Ether, Bad Randomness, Denial of service, Front Running, Short Address and other vulnerabilities. Analyze the following solidity smart contract for security vulnerabilities, bugs, and faulty logic. Identify all problematic lines and explain the risks associated with each.",
+     'post_code_part': ""},
+    {'dataset_version': 'v2',
+     'dataset_name': 'solidity',
+     'llm_model': LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B,
+     'pre_code_part': "Smart contracts written in Solidity language may contain vulnerabilities such as DelegateCall, Arithmetic/Integer Overflow and Underflow, Nested Call, Reentrancy, Timestamp Dependency, TxOrigin, Transaction Order Dependency, Unchecked Call, Unprotected Suicide, Frozen Ether, Bad Randomness, Denial of service, Front Running, Short Address and other vulnerabilities. Analyze the following solidity smart contract for security vulnerabilities, bugs, and faulty logic. Identify all problematic lines and explain the risks associated with each.",
+     'post_code_part': ""},
+    {'dataset_version': 'v2',
+     'dataset_name': 'solidity',
+     'llm_model': LLMModels.DEEPSEEK_R1_DISTILL_QWEN_32B,
+     'pre_code_part': "Smart contracts written in Solidity language may contain vulnerabilities such as DelegateCall, Arithmetic/Integer Overflow and Underflow, Nested Call, Reentrancy, Timestamp Dependency, TxOrigin, Transaction Order Dependency, Unchecked Call, Unprotected Suicide, Frozen Ether, Bad Randomness, Denial of service, Front Running, Short Address and other vulnerabilities. Analyze the following solidity smart contract for security vulnerabilities, bugs, and faulty logic. Identify all problematic lines and explain the risks associated with each.",
+     'post_code_part': ""},
+    {'dataset_version': 'v1',
+     'dataset_name': 'solidity',
+     'llm_model': LLMModels.CODEGEN_16B_MULTI,
+     'pre_code_part': "",
+     'post_code_part': ""},
+    # solidity detection dataset
+    {'dataset_version': 'v1',
+     'dataset_name': 'solidity_detect_1',
+     'llm_model': LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B,
+     'pre_code_part': "Smart contracts written in Solidity language may contain vulnerabilities such as DelegateCall, Arithmetic/Integer Overflow and Underflow, Nested Call, Reentrancy, Timestamp Dependency, TxOrigin, Transaction Order Dependency, Unchecked Call, Unprotected Suicide, Frozen Ether, Bad Randomness, Denial of service, Front Running, Short Address and other vulnerabilities. Analyze the following solidity smart contract for security vulnerabilities, bugs, and faulty logic. Identify whether the smart contract contains or does not contain security vulnerabilities, bugs, and faulty logic",
+     'post_code_part': ""},
+    {'dataset_version': 'v1',
+     'dataset_name': 'solidity_detect_3',
+     'llm_model': LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B,
+     'pre_code_part': "Analyze the following Solidity smart contract and classify it as Common Vulnerable (if it has any of: Reentrancy, Access Control, Integer Overflow/Underflow, Unchecked External Calls, Logic Errors, Timestamp Dependence, Denial of Service, or Delegatecall Misuse), Uncommon Vulnerable (if it has other types of vulnerabilities), or Non-Vulnerable (if none found), and briefly explain the detected vulnerabilities with one-line reasons.",
+     'post_code_part': ""},
+    {'dataset_version': 'v1',
+     'dataset_name': 'solidity_detect_15',
+     'llm_model': LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B,
+     'pre_code_part': "Analyze the following Solidity smart contract and classify it into one or more of the following vulnerability types based on its most critical security flaw: access_control, bad_randomness, delegatecall, denial_of_service, front_running, integer_overflow_underflow, non-vulnerable, numerical_consistency, reentrancy, short_addresses, timestamp_dependency, transaction_ordering_dependency, unchecked_call, unprotected self-destruct and other. Return only the appropriate vulnerability types from the list above.",
+     'post_code_part': ""}
+]
 
-
-
-
-
+for params in job_params:
+    print(run_tokenizing_job(params))
+print("Finished all jobs!")

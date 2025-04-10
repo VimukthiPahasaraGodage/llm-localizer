@@ -1,0 +1,2 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,MultiTransfer.sol,0xc7e3632f9977a73eefa8ca2ab3d8218182eccb24,{5},{5},{5},{5},False,,False,

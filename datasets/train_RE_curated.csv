@@ -1,0 +1,57 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,Piggy_BanK.sol,0xdd71e35f680bb5adc77c6d1d9ef5793598e613dc,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+1,our_bank.sol,0x2082a9dfbef18d0b4798845bc564930a5cc436e3,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+2,cd_Bank.sol,0x47e53dd4f108ea392dcc1ebd341e13ea75fbf93b,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+3,C_Bank.sol,0xaa4f28fe9d4819fc9e6033e93b0cb0362d132841,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+4,Piggy_BnK.sol,0x9130ae6c4c70b7dd53a479d67d21646a87614045,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+5,Piggy_Bank.sol,0x0da76de0916ef2da3c58a97e4d09d501c56a9f15,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+6,c_Bank.sol,0x320af898ba522062419dd967ab9e2dad9f860d2f,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+7,Y_BANK.sol,0xb69d64383103afe6871d659d15d51bb106d66dc1,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+8,MY_BANK.sol,0xf015c35649c82f5467c9c74b7f28ee67665aad68,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+9,CaptureTheFlag.sol,0x4d955895c61d6a7a2dc85f2feedbda6489c6f67d,{127},{128},{127},,TRUE,"{128, 127}",TRUE,post_claude_results_train_Reentrancy.pkl
+10,Y_WALLET.sol,0x79e784a77254aedbc6488ce0001abee487b1d88d,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+11,C_BANK.sol,0xfd4b392ca5495459044b9eca9856cdab0a596b33,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+12,D_BANK.sol,0xd518db222f37f9109db8e86e2789186c7e340f12,{47},{49},{47},,TRUE,"{47,49}",TRUE,post_claude_results_train_Reentrancy.pkl
+13,ULTRA_BANK.sol,0x463c74b95efef9c58a041edf3e06a610ea275108,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+14,cD_Bank.sol,0xb2eb463fd68ba808a7864b8f9f021383bf96b01a,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+15,SIMPL_BANK.sol,0xab78561558d06ace60f206d9fcaac65bb1cfdee2,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+16,pg_bank.sol,0xb3e396f500df265cdfde30ec6e80dbf99bee9e96,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+17,PG_Bank.sol,0x730f8c40a08d02349a2d64e3193cf207a2a2dfe7,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+18,offshore_bank.sol,0x26db40ad8229696a1ac5c7cb468273658084a887,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+19,Piggy_BNK.sol,0x10452f898766f59a8514dc6856ff62bbdc6a0f51,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+20,WWW_wallet.sol,0xa4e1cbf64c3b5db2a6e6f23cb5286b97d80b86e3,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+21,ACCURAL_DEPOSIT.sol,0x4320e6f8c05b27ab4707cd1f6d5ce6f3e4b3a5a1,{47},{49},{47},,TRUE,"{49, 47}",TRUE,post_claude_results_train_Reentrancy.pkl
+22,C_banK.sol,0x02242d41c54f261a85ac8e8efa7046a3dfd53113,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+23,W_WALLET.sol,0x7b368c4e805c3870b6c49a3f1f49f69af8662cf3,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+24,PENNY_BY_PENNY.sol,0x96edbe868531bd23a6c05e9d0c424ea64fb1b78b,{56},{58},{56},,TRUE,{56},FALSE,post_claude_results_train_Reentrancy.pkl
+25,ultra_bank.sol,0x094a5e6e395212bfc6c773b2210409eba4ca19d7,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+26,i_bank.sol,0xa3fd310f631b5fb75245afad746905d564c73aef,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+27,keepMyEther.sol,0xb7c5c5aa4d42967efe906e1b66cb8df9cebf04f7,{18},{19},{18},,TRUE,{18},TRUE,post_claude_results_train_Reentrancy.pkl
+28,trust_bank.sol,0x6b32d3d23b5fcb26992fdcaa7c8359daa5fc3a10,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+29,PERSONAL_BANK.sol,0x01f8c4e3fa3edeb29e514cba738d87ce8c091d3f,{47},{49},{47},,TRUE,"{49, 47}",TRUE,post_claude_results_train_Reentrancy.pkl
+30,PG_bank.sol,0xe0b0831d52d970298fe4a9dd4fe3f22bcd130fae,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+31,p_bank.sol,0x6e3c384480e71792948c29e9fc8d7b9c9d75ae8f,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+32,PIGGY_BANK.sol,0xe610af01f92f19679327715b426c35849c47c657,{34},{36},{34},,TRUE,"{34, 36}",TRUE,post_claude_results_train_Reentrancy.pkl
+33,M_BANK.sol,0xdf4b83a451ef20b925ce39f4da2a021722688370,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+34,CB_BANK.sol,0x02dd48ff449f57a4632c39068e0ca0f4325c3a8d,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+35,PiggY_BANK.sol,0x400e115f1be2b646139c298272a43b2cff2b127e,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+36,Private_accumulation_fund.sol,0xa5d6accc5695327f65cbf38da29198df53efdcf0,{35},{37},{35},,TRUE,"{35,37}",TRUE,post_claude_results_train_Reentrancy.pkl
+37,WWW_WALLET.sol,0x60de9d9b062595cf10bc3fbf9ed5a6104befe882,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+38,Piggy_bank.sol,0x08d5215d318d3810883b813958dcb3409568aeef,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+39,c_bank.sol,0xb07a66f0615e922abb9c6eb56f40adf843e0e391,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+40,PRIVATE_ETH_CELL.sol,0x4e73b32ed6c35f570686b89848e5f39f20ecc106,{47},{49},{47},,TRUE,"{49, 47}",TRUE,post_claude_results_train_Reentrancy.pkl
+41,X_WALLET.sol,0x93c32845fae42c83a70e5f06214c8433665c2ab5,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+42,B_BANK.sol,0xebcb9bf5a615e6f00316a25c62f79333a0b49871,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+43,PrivateDeposit.sol,0x7a8721a9d64c74da899424c1b52acbf58ddc9782,{45},{47},{45},,TRUE,"{45,47}",TRUE,post_claude_results_train_Reentrancy.pkl
+44,BountyHunt.sol,0xb5766f61911f8b520b0e938aae100834aa3048c6,{19},{20},{19},,TRUE,"{19,20}",TRUE,post_claude_results_train_Reentrancy.pkl
+45,piggy_bank.sol,0xa7b16041c142cce3681f63fb53e55b8eed7d4002,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+46,BANK_SAFE.sol,0x561eac93c92360949ab1f1403323e6db345cbf31,{47},{49},{47},,TRUE,"{47,49}",TRUE,post_claude_results_train_Reentrancy.pkl
+47,Cb_BANK.sol,0x8db0ee1483fbe9db734d8a5e885dc55adfee21a5,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+48,Piggy_BANK.sol,0xdfe81e65fe4d3d030f66ab7206969442bf9534b8,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+49,WALLET.sol,0xcead721ef5b11f1a7b530171aab69b16c5e66b6e,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+50,ETH_FUND.sol,0x941d225236464a25eb18076df7da6a91d0f95e9e,{37},{39},{37},,TRUE,"{37,39}",TRUE,post_claude_results_train_Reentrancy.pkl
+51,MONEY_BOX.sol,0xbe4041d55db380c5ae9d4a9b9703f1ed4e7e3888,{56},{58},{56},,TRUE,"{56, 58}",TRUE,post_claude_results_train_Reentrancy.pkl
+52,cb_BANK.sol,0x143eea4413231878f58dc812b3dc6f22835a5dd6,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl
+53,C_BAnK.sol,0xd96053c281c1424eff97c5739c6a86d572519227,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+54,offshore_Bank.sol,0x5e1a650b8dd96a3d1e3d9e8a95dbcdccdeb88e12,{22},{24},{22},,TRUE,"{24, 22}",TRUE,post_claude_results_train_Reentrancy.pkl
+55,X_BANK.sol,0x0529663bd4d73d3dd06f90247d8c2e802755b7ec,{22},{24},{22},,TRUE,"{22,24}",TRUE,post_claude_results_train_Reentrancy.pkl

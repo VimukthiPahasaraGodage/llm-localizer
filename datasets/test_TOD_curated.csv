@@ -1,0 +1,13 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,guess_tw.sol,0xa9aebbf67433e3e8206af6fc2ddd99ff8e7cc137,{43},,{43},,False,,False,
+1,we_play.sol,0x6df766e4b524aa1d4b4b9405994ca69dc161da3f,{34},,{34},,False,,False,
+2,DTT_Exchange.sol,0x7abe2a84368af480ffd4beb7676133c30f37dc05,{226},,{226},,False,,False,
+3,CNCICO.sol,0x720e794b39f31f0c2746f688c655c7a637f04db4,{335},,{335},,False,,False,
+4,qui_qz.sol,0x3fab284a3cd0a6d88d18d0fda4bc1a76cdacd68a,{43},,{43},,False,,False,
+5,CCCP.sol,0xa60e456630a802bfb801a2a4202a820d74d687d2,{88},,{88},,False,,False,
+6,QUESTQUESTION.sol,0xc77081641129a028d622f85671ea172ac5595938,{39},,{39},,False,,False,
+7,just_try.sol,0xa72baa9e9097e5913cf7d136c5ee3f06c6170ae7,{35},,{35},,False,,False,
+8,Crowdsale.sol,0xca4e51d78c1c41032b44923bbfa1bd99bcc194cc,{661},,{661},,False,,False,
+9,TRU_GAME.sol,0xa2016c28291a9a460095ada5c52c88cd3fd9a656,{34},,{34},,False,,False,
+10,GUESS_THE_WORD.sol,0xbb51397fb8d3b91a08eff3c34d5c869c1d149ec5,{39},,{39},,False,,False,
+11,Q_GAME.sol,0x5838f878000fe44b6f6c677bbf839e12f097c147,{31},,{31},,False,,False,

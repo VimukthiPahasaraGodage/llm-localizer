@@ -1,0 +1,101 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,TokenERC20.sol,0xd70e66775a74a9aedeac6e28313e1033cd726552,{482},{485},,{482},True,"{482, 485, 487}",True,post_claude_results_train_Nested_Call.pkl
+1,CyberTrustMoney.sol,0x636ee05cdc28a7d6af8d04ac2c45a3d3095263cb,{153},{156},,{153},True,{156},True,post_claude_results_train_Nested_Call.pkl
+2,Distributor.sol,0x3cd0c444137bac6996f262f92d1b79d6e8ad85b8,{42},{44},,{42},True,{44},True,post_claude_results_train_Nested_Call.pkl
+3,AlbertToolsV1.sol,0x6f4902bcea0a62bc2abba3edb8dfe279e2c2a71c,{24},{25},,{24},True,"{25, 36}",True,post_claude_results_train_Nested_Call.pkl
+4,bet1000_001eth.sol,0xab3b0810b839f49c2d619b55f196aae764422e22,{132},{134},,{132},True,{134},True,post_claude_results_train_Nested_Call.pkl
+5,contracts/multisend/Multisend.sol,0x22bc0693163ec3cee5ded3c2ee55ddbcb2ba9bbe,{29},{30},,{29},True,"{29, 30, 31}",True,post_claude_results_train_Nested_Call.pkl
+6,Dispenser.sol,0xa47e7fd2e2ef08d63b58d9a416d88385e1145355,{28},{29},,{28},True,{29},True,post_claude_results_train_Nested_Call.pkl
+7,TarynToken.sol,0x4bb301e545a3e948b20ea9a0f02d3948af6fe6db,{102},{106},,{102},True,{106},True,post_claude_results_train_Nested_Call.pkl
+8,MultiSender.sol,0x67af54d9e20fe6f9dd2dfe0449ed65f97a3638de,{5},{6},,{5},True,{6},True,post_claude_results_train_Nested_Call.pkl
+9,BatchTransfer.sol,0x6e82aabffe24f275ad3f703aca922dd4d8f86168,{144},{146},,{144},True,{146},True,post_claude_results_train_Nested_Call.pkl
+10,MiningToken.sol,0xbac2dc4fe58f1f3382f036b1cb8d92591e0c135f,{239},{240},,{239},True,"{240, 190}",True,post_claude_results_train_Nested_Call.pkl
+11,A004.sol,0xcae22909c9dbc37c2f6c2780d1f58decd5d3b1fd,{44},{46},,{44},True,{46},True,post_claude_results_train_Nested_Call.pkl
+12,EtherFox.sol,0x48e34dd473867d78c4a1304ff28e55150873590d,{99},{102},,{99},True,"{114, 99, 117, 102}",True,post_claude_results_train_Nested_Call.pkl
+13,Nihilum.sol,0x5f9df71056d7c7530ae75d773bac98cfa887dbd4,{314},{316},,{314},True,,False,
+14,BizalomIo.sol,0x37dae106f0840575a6854de5777a3ea6aaa4b777,{80},{83},,{80},True,{83},True,post_claude_results_train_Nested_Call.pkl
+15,Distribute.sol,0x84004ca3b679b94d5c27c59d710e8201068bb93b,{14},{15},,{14},True,"{14, 15}",True,post_claude_results_train_Nested_Call.pkl
+16,MultiTransfer.sol,0x75befea129f89ac27c8bf3f8215730ee944369a7,{37},{38},,{37},True,{38},True,post_claude_results_train_Nested_Call.pkl
+17,TGToken.sol,0x20ed9f7c91e2b4ab24ae1d41559fbc01b246369b,{166},{170},,{166},True,{170},True,post_claude_results_train_Nested_Call.pkl
+18,UnilotBonusTailEther.sol,0xcff681c07541b6921aac59fee73f1bab7b29d7b7,{332},{333},,{332},True,{333},True,post_claude_results_train_Nested_Call.pkl
+19,Vitaluck.sol,0xb36a7cd3f5d3e09045d765b661af575e3b5af24a,{127},{130},,{127},True,"{130, 163, 136, 117, 122}",True,post_claude_results_train_Nested_Call.pkl
+20,ITSETH.sol,0xfb9ba5b45ffb009a369fdb5140fd470e7bdcdd66,{60},{63},,{60},True,{63},True,post_claude_results_train_Nested_Call.pkl
+21,InternalTxsTest.sol,0x93ecd2badb4ef90cdf913d26ecd7a29feece19ac,{9},{10},,{9},True,{10},True,post_claude_results_train_Nested_Call.pkl
+22,Kongtou.sol,0x3967f481031f78a3fcbfe5c6a1079ec9f8426432,{37},{38},,{37},True,,False,
+23,SendToMany.sol,0x70e531091d82e183f7246012d1566c3fe1315625,{28},{30},,{28},True,"{28, 30}",True,post_claude_results_train_Nested_Call.pkl
+24,DoubleEther.sol,0x9d1cbf4ef833340120e721e5028c326ec1066c7e,{374},{379},,{374},True,{379},True,post_claude_results_train_Nested_Call.pkl
+25,ConferencePay.sol,0xce5eae9c07f7a65e904396a7849f37ab3ed14465,{53},{58},,{53},True,{58},True,post_claude_results_train_Nested_Call.pkl
+26,MultiTransfer.sol,0x945d886e3859cc683c368ee3390b1c2c332dde46,{34},{35},,{34},True,{35},True,post_claude_results_train_Nested_Call.pkl
+27,Random.sol,0x80406b7d3b9189968e3499d4f69cb015ae6f4b96,{603},{604},,{603},True,{604},True,post_claude_results_train_Nested_Call.pkl
+28,UserfeedsClaimWithConfigurableTokenMultiTransfer.sol,0xecbed48098c4f25a16195c45ddf5fd736e28b14b,{152},{153},,{152},True,"{153, 125, 191, 173}",True,post_claude_results_train_Nested_Call.pkl
+29,Disperse.sol,0x99fbbfb44c53ba981e1d835313bd5e0043441c3e,{12},{13},,{12},True,{13},True,post_claude_results_train_Nested_Call.pkl
+30,MultiTransfer.sol,0x5baaa5d1f5fd6f9136d470b6508b05bcded61589,{35},{37},,{35},True,"{58, 52, 37}",True,post_claude_results_train_Nested_Call.pkl
+31,AirDrop.sol,0x9383bdb2229c0e62404d4748e337d7ffda4a4446,{94},{95},,{94},True,{95},True,post_claude_results_train_Nested_Call.pkl
+32,MultiSender.sol,0xafee74b6b4a3fc8b399b4c12cabfd9acb53c4992,{21},{22},,{21},True,{22},True,post_claude_results_train_Nested_Call.pkl
+33,Tipbot.sol,0x51bb6fd1ab2cf10076549df44d4b6eda2a00e093,{43},{45},,{43},True,,False,
+34,UpgradebleStormSender.sol,0x8ee52258265a68b594288da6b6e7b166320d6eba,{251},{254},,{251},True,{254},True,post_claude_results_train_Nested_Call.pkl
+35,CapitalPay.sol,0x199fb7016f7635de3924d80087bcb367cd123b51,{197},{200},,{197},True,"{200, 219, 205}",True,post_claude_results_train_Nested_Call.pkl
+36,bet_various.sol,0x4caa99bf19a1834bfe87c5552e11a2506e4101e5,{137},{139},,{137},True,"{144, 139}",True,post_claude_results_train_Nested_Call.pkl
+37,ObizcoinCrowdsaleToken.sol,0xbf5eed8d51b20834c9d887b22c229237922055d7,{190},{192},,{190},True,"{193, 194, 195, 196, 197, 199, 190}",True,post_claude_results_train_Nested_Call.pkl
+38,batchTransfer.sol,0xfea71f436ec963507c26f424d93168e4285cd822,{71},{73},,{71},True,"{73, 68, 76}",True,post_claude_results_train_Nested_Call.pkl
+39,AirDrop.sol,0x811437d9fbe43be7ecff117d9986253c36bc2438,{121},{122},,{121},True,"{122, 139}",True,post_claude_results_train_Nested_Call.pkl
+40,xyphar.sol,0x12359487aa7844fead6a20aca5bfae1d3196cedb,{43},{46},,{43},True,{46},True,post_claude_results_train_Nested_Call.pkl
+41,SendEtherContributors.sol,0xb21f0b2b35332d1a39bcfb8f2f18bd49a8f8cbe8,{57},{60},,{57},True,{60},True,post_claude_results_train_Nested_Call.pkl
+42,Lotto.sol,0x3c635e7d4a73a09db2317f0abca7243913908929,{70},{71},,{70},True,{71},True,post_claude_results_train_Nested_Call.pkl
+43,AirdropEther.sol,0xa9860973c62986cec31f51a858608fcd18b55264,{57},{60},,{57},True,{60},True,post_claude_results_train_Nested_Call.pkl
+44,SmartSageMatrix.sol,0x8a219f369793a8497a283f167b6b409f7ebc8eae,{95},{98},,{95},True,{98},True,post_claude_results_train_Nested_Call.pkl
+45,MSRiseTokenSale.sol,0xcf2f73897369b8af9229cd6eb3923267256c13dd,{405},{410},,{405},True,{410},True,post_claude_results_train_Nested_Call.pkl
+46,Slot.sol,0x17d0582dee50a5401bb8f65ac29ec2da50c670ea,{266},{268},,{266},True,"{281, 268, 276}",True,post_claude_results_train_Nested_Call.pkl
+47,GameLogic.sol,0x5d84827b41abefd47af454f77227dab4895c47a9,{595},{598},,{595},True,,False,
+48,Slot.sol,0xd6b3d9e44f767f0c178f60d24fb186ba49bc444a,{389},{390},,{389},True,{390},True,post_claude_results_train_Nested_Call.pkl
+49,Transit.sol,0x43dce347203eb1a728c7364f4b423733a04c5338,{175},{177},,{175},True,"{186, 195, 203}",True,post_claude_results_train_Nested_Call.pkl
+50,NaiveSplit.sol,0xb0ebc0f42420dcf301c711f79850b76213fad373,{27},{28},,{27},True,{28},True,post_claude_results_train_Nested_Call.pkl
+51,MultiSend.sol,0x410804f20daf6498ec564a20132985b8da401c2e,{34},{35},,{34},True,{35},True,post_claude_results_train_Nested_Call.pkl
+52,BulkSend.sol,0x84e12ee99f6ae405d1d75a5eddb4513a1e90157c,{106},{107},,{106},True,"{107, 150}",True,post_claude_results_train_Nested_Call.pkl
+53,DisperseVKZ.sol,0xcff6cfda2c289022e65a043c8f7b8ffe768be2dd,{12},{13},,{12},True,{13},True,post_claude_results_train_Nested_Call.pkl
+54,MultiEthSender.sol,0xb52323c98e75974d2139e65d3cba06c43a53cae4,{14},{15},,{14},True,{15},True,post_claude_results_train_Nested_Call.pkl
+55,NFToken.sol,0x308df6e60b7dffc2bdee7fa62d41ef53ac5d4e43,{467},{469},,{467},True,"{465, 466, 443, 441, 442, 475}",True,post_claude_results_train_Nested_Call.pkl
+56,MultiSend.sol,0xc6fb494987cafaeda71a4052da7ff0695ca3998d,{38},{39},,{38},True,{39},True,post_claude_results_train_Nested_Call.pkl
+57,MultiSender.sol,0x3885a234f24b1a4842f1df0f1ee2f91507876851,{75},{78},,{75},True,{78},True,post_claude_results_train_Nested_Call.pkl
+58,Rainmaker.sol,0x76e5cfba9633a467e77db2587a50c0bec4389ab9,{65},{67},,{65},True,{67},True,post_claude_results_train_Nested_Call.pkl
+59,Win20ETH.sol,0x6ac93e04f24b57e7544bce967aedd0f7df50ea0d,{176},{178},,{176},True,set(),False,post_claude_results_train_Nested_Call.pkl
+60,FantasySports.sol,0x14b16fdf2b13589e9ddb834451bd4d673838e88c,{96},{97},,{96},True,,False,
+61,UnilotBonusTailToken.sol,0xc890b3450f273209cd19a11d4027e968bdd6f04e,{332},{333},,{332},True,"{616, 428, 333, 437}",True,post_claude_results_train_Nested_Call.pkl
+62,contracts/multisender/UpgradebleAirdropSender.sol,0x14f550a6ab3c46aa1e01f69e5bc06b7ec8714142,{126},{129},,{126},True,"{129, 111}",True,post_claude_results_train_Nested_Call.pkl
+63,Send.sol,0xf9e7083fd1ca37db176046ba17cc0fede7fa855d,{18},{19},,{18},True,{19},True,post_claude_results_train_Nested_Call.pkl
+64,Netethermoney.sol,0x63d8c374aee994d62fa532f39089e1e61feae310,{43},{46},,{43},True,{46},True,post_claude_results_train_Nested_Call.pkl
+65,C98MultiSend.sol,0xaec945e04baf28b135fa7c640f624f8d90f1c3a6,{26},{27},,{26},True,"{27, 39}",True,post_claude_results_train_Nested_Call.pkl
+66,UTEMIS.sol,0x78b17cc10c4d34fbf6cb474731f7340e487a5db3,{275},{279},,{275},True,{282},True,post_claude_results_train_Nested_Call.pkl
+67,Crowdsale.sol,0xcdc687a449c43fcf87d439af9fa72ee9602e6b1f,{634},{638},,{634},True,,False,
+68,ClubEther.sol,0x65622d8cfcd3d3baf37746136e877cafc7936e87,{57},{60},,{57},True,{60},True,post_claude_results_train_Nested_Call.pkl
+69,BatchTransferContract.sol,0x8668ef4534ec8716dede42807084a526ff4904e2,{76},{78},,{76},True,{78},True,post_claude_results_train_Nested_Call.pkl
+70,Distribute.sol,0xf3163e55e521bd49521976d43d82d21a9729dc9d,{13},{14},,{13},True,{14},True,post_claude_results_train_Nested_Call.pkl
+71,DecenterHackathon.sol,0x9bd7df96f525d5646c362b418a1ea2483e6221e8,{207},{208},,{207},True,{208},True,post_claude_results_train_Nested_Call.pkl
+72,ShiftSale.sol,0x6b1fb08639acec6ed415bacab6453b523aec7d4b,{122},{123},,{122},True,{123},True,post_claude_results_train_Nested_Call.pkl
+73,MultiSender.sol,0x0d8b7b86b9ade4a5b0c21894527a25640d0606df,{88},{89},,{88},True,{89},True,post_claude_results_train_Nested_Call.pkl
+74,MultiTransfer.sol,0xce5093dd7cf90699bba881af8f2c8ad0a7066dc5,{5},{6},,{5},True,{6},True,post_claude_results_train_Nested_Call.pkl
+75,SukuMultisend.sol,0xdf5bd4b818ab63d749f22c6d7c4ecfc81c271521,{343},{346},,{343},True,"{328, 346}",True,post_claude_results_train_Nested_Call.pkl
+76,MultiTransfer.sol,0x34d5c018e0be37dccaed17c2d25b3538fb2f7eef,{66},{67},,{66},True,{67},True,post_claude_results_train_Nested_Call.pkl
+77,Disperse.sol,0x9c73292163b09316b18e2a12062a9e70d2b5328b,{37},{38},,{37},True,"{65, 38, 78}",True,post_claude_results_train_Nested_Call.pkl
+78,contracts/PsycheArt.sol,0x5dd49ce0417db66cd3ed10a350752f508101889b,{225},{228},,{225},True,"{228, 246}",True,post_claude_results_train_Nested_Call.pkl
+79,Keomyuniti.sol,0x594537c0f67731b653ba2169f41f2681fe6ec8e1,{57},{60},,{57},True,{60},True,post_claude_results_train_Nested_Call.pkl
+80,DECENTRAL_ART.sol,0x7c620d582a6eae9635e4ca4b9a2b1339f20ee1f2,{1299},{1301},,{1299},True,Not_Found,False,post_claude_results_train_Nested_Call.pkl
+81,FireCasino.sol,0xa025151aee27bedc1518328657888330377291e9,{122},{124},,{122},True,{124},True,post_claude_results_train_Nested_Call.pkl
+82,LogOfClaimedMEVBlocks.sol,0x0000000020e0a4bc775eb0cbefc7cfbeafc88444,{104},{106},,{104},True,{106},True,post_claude_results_train_Nested_Call.pkl
+83,EtherBuy.sol,0x0444113cad736b6452c824c642fed8a4df1c4a34,{65},{68},,{65},True,{68},True,post_claude_results_train_Nested_Call.pkl
+84,DistributeETH.sol,0x37afbfb4330d449ce7d231f2356f4f9297c32bc1,{55},{56},,{55},True,"{56, 50}",True,post_claude_results_train_Nested_Call.pkl
+85,MixMyETH.sol,0x004dc319ffc645031065d6755cec6e79c11f7b30,{56},{59},,{56},True,{59},True,post_claude_results_train_Nested_Call.pkl
+86,contracts/converter/LiquidityPoolV1Converter.sol,0xa2787e3bfd992725183868c40d36137bbc174c3a,{270},{273},,{270},True,,False,
+87,NTeria.sol,0xdd6a07b2c2df575367845c70c7939c2e955f4246,{102},{104},,{102},True,"{104, 85}",True,post_claude_results_train_Nested_Call.pkl
+88,SSoftSolution.sol,0xe8ccf54c9727c39043af4e21e3a00672c3267935,{57},{60},,{57},True,{60},True,post_claude_results_train_Nested_Call.pkl
+89,contracts/multisender/UpgradebleStormSender.sol,0x6ac2388cedf41820c333e8de8f0e75cf424b4b13,{124},{127},,{124},True,{127},True,post_claude_results_train_Nested_Call.pkl
+90,contracts/MultiTransfer.sol,0xa16db2cd6218bb84003d17b982edc2cedb16c87d,{53},{55},,{53},True,{55},True,post_claude_results_train_Nested_Call.pkl
+91,ProofOfLongHodl.sol,0x61ea25cfd1509888211f9e58e82edde74acc59b1,{364},{367},,{364},True,"{367, 309, 343, 313, 283, 279}",True,post_claude_results_train_Nested_Call.pkl
+92,eTrustmoney.sol,0x1185ac9e7cc026beeae17a822be27ed7a35b6456,{370},{373},,{370},True,{373},True,post_claude_results_train_Nested_Call.pkl
+93,UserfeedsClaimWithConfigurableValueMultiTransfer.sol,0xfad31a5672fbd8243e9691e8a5f958699cd0aaa9,{152},{153},,{152},True,"{152, 153, 154, 155}",True,post_claude_results_train_Nested_Call.pkl
+94,HireGoCrowdsale.sol,0x47349ebb01fa27bb3ad72995ff7182d949851a93,{399},{404},,{399},True,"{384, 417}",True,post_claude_results_train_Nested_Call.pkl
+95,BulkSender.sol,0x469503159ddf6bfd0a9ec8eba8e97a84fd3eae5b,{10},{14},,{10},True,{14},True,post_claude_results_train_Nested_Call.pkl
+96,DeLottery.sol,0x4763768d6938353c9c8849115c58a32142b0f9ea,{208},{212},,{208},True,"{212, 213}",True,post_claude_results_train_Nested_Call.pkl
+97,PetjaTokenSale.sol,0xccb12d9d43e59ea578f2f75252fc7cc588ce7820,{405},{410},,{405},True,{410},True,post_claude_results_train_Nested_Call.pkl
+98,JusMoa.sol,0x649a8b25b9cb63bfc8df6d8a23214dd7325819e2,{61},{64},,{61},True,{64},True,post_claude_results_train_Nested_Call.pkl
+99,EagleTurstMoney.sol,0xc51218a624584cad04716d689593b798741e4acb,{71},{74},,{71},True,{74},True,post_claude_results_train_Nested_Call.pkl

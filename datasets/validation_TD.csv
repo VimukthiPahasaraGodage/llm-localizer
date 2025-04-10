@@ -1,0 +1,13 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,Auctionify.sol,0x3a6984181f49c9ef64ada32373e736db0c9f1078,{156},{156},{156},,False,,False,
+1,GiftEth.sol,0x94ba431ee7b1b3a7326aaa4834168c87e8e4b0f8,{21},{21},{21},,False,,False,
+2,Dextera.sol,0x962c3437d319bcff0f6849e228cca8928f4412d0,{197},{197},{197},,False,,False,
+3,Ambassador.sol,0x85f1752fcaf37c45aa77d677e54e94f533c49874,{141},{141},{141},,False,,False,
+4,C_bAnK.sol,0x62500ad71aa50744bbd4917d1a64938897e952bf,{20},{20},{20},,False,,False,
+5,TokenSale.sol,0x16b888fa2fc83043c3ad6d6c2780c8248461bb15,{134},{134},{134},,False,,False,
+6,IQNCrowdsale.sol,0xc10c99cad6d252271d8465c63f8dbad09f43fba2,{91},{91},{91},,False,,False,
+7,Promise.sol,0x23e6311dd0eb3556b300404f0cba576d504be223,{93},{93},{93},,False,,False,
+8,VSTERICO.sol,0xfe5acbd46abfc246c3a4f9b0019aae624ff0da98,{163},{163},{163},,False,,False,
+9,Crowdsale.sol,0xabac24f714130ec3040e36e58fadfca4b785b898,{251},{251},{251},,False,,False,
+10,CommonSale.sol,0x5ae96153d99dfdd7a6b471451afe0f564e10b934,{493},{493},{493},,False,,False,
+11,Crowdsale.sol,0xe117bb9d1e0fc6e859d9bf174c53baa7c673547a,{445},{445},{445},,False,,False,

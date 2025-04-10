@@ -1,5 +1,7 @@
 from enum import Enum
+
 from transformers import AutoConfig
+
 
 # Even though we list many LLMs here, CodeGen models and the instruct models will be used mainly(base models are for fine-tuning is needed)
 class LLMModels(Enum):
@@ -14,8 +16,8 @@ class LLMModels(Enum):
     CODEGEN2_16B = 6
 
     # DeepSeek Coder V1 LLM models
-    DEEPSEEK_CODER_V1_BASE_67B = 7 # 6.7B
-    DEEPSEEK_CODER_V1_INSTRUCT_67B = 8 # 6.7B
+    DEEPSEEK_CODER_V1_BASE_67B = 7  # 6.7B
+    DEEPSEEK_CODER_V1_INSTRUCT_67B = 8  # 6.7B
     DEEPSEEK_CODER_V1_BASE_33B = 9
     DEEPSEEK_CODER_V1_INSTRUCT_33B = 10
 
@@ -37,6 +39,55 @@ class LLMModels(Enum):
     DEEPSEEK_R1_DISTILL_QWEN_14B = 19
     DEEPSEEK_R1_DISTILL_QWEN_32B = 20
 
+    @staticmethod
+    def get_model_nickname(llm_model):
+        model_name = None
+        match llm_model:
+            case LLMModels.DEEPSEEK_CODER_V1_BASE_67B:
+                model_name = "deepseek_coder_6_7b_base"
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B:
+                model_name = "deepseek_coder_6_7b_instruct"
+            case LLMModels.DEEPSEEK_CODER_V1_BASE_33B:
+                model_name = "deepseek_coder_33b_base"
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
+                model_name = "deepseek_coder_33b_instruct"
+            case LLMModels.DEEPSEEK_CODER_V2_LITE_BASE_16B:
+                model_name = "DeepSeek_Coder_V2_Lite_Base"
+            case LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
+                model_name = "DeepSeek_Coder_V2_Lite_Instruct"
+            case LLMModels.QWEN_25_CODER_BASE_14B:
+                model_name = "Qwen2_5_Coder_14B"
+            case LLMModels.QWEN_25_CODER_BASE_32B:
+                model_name = "Qwen2_5_Coder_32B"
+            case LLMModels.QWEN_25_CODER_INSTRUCT_GPTQ_INT8_14B:
+                model_name = "Qwen2_5_Coder_14B_Instruct"
+            case LLMModels.QWEN_25_CODER_INSTRUCT_GPTQ_INT8_32B:
+                model_name = "Qwen2_5_Coder_32B_Instruct"
+            case LLMModels.QWEN_QWQ_32B:
+                model_name = "Qwen_QwQ_32B"
+            case LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B:
+                model_name = "DeepSeek_R1_Distill_Llama_8B"
+            case LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B:
+                model_name = "DeepSeek_R1_Distill_Qwen_14B"
+            case LLMModels.DEEPSEEK_R1_DISTILL_QWEN_32B:
+                model_name = "DeepSeek_R1_Distill_Qwen_32B"
+            case LLMModels.CODEGEN_350M_MULTI:
+                model_name = "codegen_350M"
+            case LLMModels.CODEGEN_6B_MULTI:
+                model_name = "codegen_6B"
+            case LLMModels.CODEGEN_16B_MULTI:
+                model_name = "codegen_16B"
+            case LLMModels.CODEGEN2_1B:
+                model_name = "codegen2_1B"
+            case LLMModels.CODEGEN2_7B:
+                model_name = "codegen2_7B"
+            case LLMModels.CODEGEN2_16B:
+                model_name = "codegen2_16B"
+            case _:
+                raise Exception("No such LLM model is defined!")
+        return model_name
+
+
 class LLMInfo:
     def __init__(self, llm_model: Enum):
         self.llm_model = llm_model
@@ -44,14 +95,20 @@ class LLMInfo:
         self.model_name = None
         self.hidden_size = None
         self.context_length = None
+        self.max_allowed_context_length = None
 
         self.define_llm_info()
         self.define_hidden_size_and_context_length()
 
     def define_hidden_size_and_context_length(self):
-        config = AutoConfig.from_pretrained(self.model_name)
+        config = AutoConfig.from_pretrained(self.model_name, trust_remote_code=True)
         self.hidden_size = config.hidden_size
         self.context_length = getattr(config, "max_position_embeddings", None)
+
+        if self.context_length < 4096:
+            self.max_allowed_context_length = self.context_length
+        else:
+            self.max_allowed_context_length = 4096
 
     def define_llm_info(self):
         match self.llm_model:
@@ -106,9 +163,3 @@ class LLMInfo:
 
     def get_context_length(self):
         return self.context_length
-
-
-
-
-
-

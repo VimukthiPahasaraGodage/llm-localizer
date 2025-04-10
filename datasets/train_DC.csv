@@ -1,0 +1,40 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,InitializableAdminUpgradeabilityProxy.sol,0x3832d2f059e55934220881f831be501d180671a7,{304},{304},,,False,,False,
+1,Destroy.sol,0x5ecdaf39eb3228c634943e591eb08f3a66eae2ba,{5},{5},,,False,,False,
+2,contracts/marketManager/TokenManager.sol,0xfef1974aeb87a92e8b8b99b7bc260f116679938f,{798},{798},,,False,,False,
+3,HOKKNFT.sol,0x8ed45d41227a0892dadb05538e852dda01512a9c,{12},{12},,,False,,False,
+4,WorkerpoolRegistry.sol,0xc76a18c78b7e530a165c5683cb1ab134e21938b4,{251},{251},,,False,,False,
+5,contracts/TadGenesisMiningProxy.sol,0x8cb331d8f117a5c914fd0f2579321572a27bf191,{65},{65},,,False,,False,
+6,ChainlinkConversionPath.sol,0xf7228efefa12cd768e0f32a7c5cd0c0d68f835e4,{532},"{532, 533, 534, 535, 536, 537, 538, 539, 540, 541, 542, 543}",,,True,{532},True,post_claude_results_train_DelegateCall.pkl
+7,ERC20ConversionProxy.sol,0xe72ecea44b6d8b2b3cf5171214d9730e86213ca2,{294},"{294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305}",,,True,{294},True,post_claude_results_train_DelegateCall.pkl
+8,DatasetRegistry.sol,0x799daa22654128d0c64d5b79eac9283008158730,{251},{251},,,False,,False,
+9,MoonbaseNFTAirdrop.sol,0x514aade50d0a679afd172720a7b6fbaccccb64ee,{826},"{832, 833, 826, 827, 828, 829, 830, 831}",,,True,set(),False,post_claude_results_train_DelegateCall.pkl
+10,HOKKDividendTracker.sol,0x95f1a50872768accbbdb728adad920b7eae7680a,{13},{13},,,False,,False,
+11,contracts/abstract/Core.sol,0xe9e10a5de4a4920d9a5fd6f0c2f205eb575fd7d6,{33},{33},,,False,,False,
+12,PermitAndCall.sol,0xe334094985bb046b95550793ea577f8dc4e6112b,{55},{55},,,False,,False,
+13,contracts/libraries/Lib_ResolvedDelegateProxy.sol,0xc891f466e53f40603250837282eae4e22ad5b088,{100},{100},,,False,,False,
+14,Implementation.sol,0x93868e62c8892e1943b3a433cc75dc136a867d29,{2542},{2542},,,False,,False,
+15,DharmaActionRegistry.sol,0xc982ee89bc9395c8bb470f9816bee3a257bb1e9b,{54},{54},,,False,,False,
+16,RibbonThetaVault.sol,0x00a62ee3d2998f67cc202990b792573961d282e6,{907},"{907, 908, 909, 910, 911, 912, 913, 914, 915, 916}",,,True,Not_Found,False,post_claude_results_train_DelegateCall.pkl
+17,DAO.sol,0xd5948d2e09fe3282bb462b8f7c0b07660aed549d,{2985},{2985},,,False,,False,
+18,contracts/pools/loss/MasterPool.sol,0xb9112feef2054acc4066c40e8c2784fa3e9d032f,{392},"{392, 393, 394}",,,True,set(),False,post_claude_results_train_DelegateCall.pkl
+19,contracts/marketManager/TokenManager.sol,0x913f2dee2746cda2ab34106c47abc4a8f4e36fa5,{121},{121},,,False,,False,
+20,contracts/EVMScriptExecutor.sol,0xfe5986e06210ac1ecc1adcafc0cc7f8d63b3f977,{80},{80},,,False,,False,
+21,DePayRouterV1.sol,0xae60ac8e69414c2dc362d0e6a03af643d1d85b92,{797},"{797, 798, 799}",,,True,set(),False,post_claude_results_train_DelegateCall.pkl
+22,CHARS.sol,0xf0f7eaca40422c163ec8471ce49ff0810c4f00bf,{353},{353},,,False,,False,
+23,DssSpell.sol,0xec0e742322f942a61fcd203334a33760a2d3a2e1,{144},{144},,,False,,False,
+24,ACL.sol,0x96f041b96708813b1d789606926c524e78543664,{252},{252},,,False,,False,
+25,Deployer2.sol,0x8df74f25672adae9866c4b33f1f906e05a3a5087,{2774},{2774},,,False,,False,
+26,DePayPaymentsV1.sol,0xa5ec11d6a58b5cc03d1f28debb5077d41287acd2,{793},"{793, 794, 795}",,,True,set(),False,post_claude_results_train_DelegateCall.pkl
+27,@c-layer/common/contracts/core/Core.sol,0x2a903c2f657803a2e614c42672247366d757ab34,{55},{55},,,False,,False,
+28,Bait.sol,0x786de27bf504d1d9c0c41c293e8c0952052155c7,{8},{8},,,False,,False,
+29,BSCWinBulls.sol,0x88578d0198dd5064d07299852083cbcd34daf26b,{12},{12},,,False,,False,
+30,contracts/MortgageHelper.sol,0x90263ea5c57dc6603ca7202920735a6e31235bb9,{306},"{306, 307, 308, 309, 310, 311, 312, 313, 314}",,,True,set(),False,post_claude_results_train_DelegateCall.pkl
+31,AssertPool.sol,0xbd0e4bd0334707e5e0dd6918308d6fc4c618ca56,{46},{46},,,False,,False,
+32,Amp.sol,0x27f97bc09a4e28d5935a08e2810b3e3c94f04220,{28},{28},,,False,,False,
+33,contracts/TadUniswapMiningProxy.sol,0x0c14e822e43796d955a30b6d974f62031da845e3,{65},{65},,,False,,False,
+34,HokkaidoInu.sol,0xe87e15b9c7d989474cb6d8c56b3db4efad5b21e8,{13},{13},,,False,,False,
+35,contracts/Batcher.sol,0xb055247634b7f166cf2fae2ab4863492105b6073,{34},{34},,,False,,False,
+36,Governance.sol,0x3157439c84260541003001129c42fb6aba57e758,{134},{134},,,False,,False,
+37,contracts/fees/TokenDistributor.sol,0xab53b3906398897f5c4161bfe2ba61d302f00218,{93},"{93, 94, 95}",,,True,,False,
+38,CHARScoin.sol,0xfe61c8a969782492589e4e72681a57ad9465d342,{353},{353},,,False,,False,

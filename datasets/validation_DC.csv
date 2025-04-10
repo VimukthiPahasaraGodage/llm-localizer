@@ -1,0 +1,6 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,HOKKBridgePort.sol,0xc3afaccd86b581a237a5a3aaabb8d173ac852aee,{12},{12},,,False,,False,
+1,Controller.sol,0xbdab70f6a4ce05b20f9274f540494532784f10ad,{22},{22},,,False,,False,
+2,BetokenFund.sol,0x452557f1a5291b64a4f5a3d44e4f90b7e82716e6,{1262},{1262},,,False,,False,
+3,Lighthouse.sol,0x532975d56cf18f597480e2521246b273ad9ae348,{347},{347},,,False,,False,
+4,RibbonThetaVault.sol,0x2556e8ba1dfaddcbf10366cd8931bd50c45dfa22,{907},"{907, 908, 909, 910, 911, 912, 913, 914, 915, 916}",,,True,set(),False,post_claude_results_validation_DelegateCall.pkl

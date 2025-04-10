@@ -1,0 +1,12 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,Airdrop.sol,0xe68bef8930a7b8d85f80b5454ca481007134736f,{37},{38},,{37},TRUE,"{38, 37}",TRUE,post_claude_results_validation_Nested_Call.pkl
+1,CryptoThingWithDescendants.sol,0x438301bbb5941f2d6c6db74ee90474cad8692087,{409},{413},,{409},TRUE,"{413, 409}",TRUE,post_claude_results_validation_Nested_Call.pkl
+2,contracts/multisender/UpgradebleStormSender.sol,0xad46172f93f56e27886544ef49707465bcf434ec,{66},{69},,{66},TRUE,"{69, 66}",TRUE,post_claude_results_validation_Nested_Call.pkl
+3,UpgradebleStormSender.sol,0xfaa183ac925268122498945ce287817b126f453b,{255},{258},,{255},TRUE,"{258, 255}",TRUE,post_claude_results_validation_Nested_Call.pkl
+4,LimeEyes.sol,0x1ff54baa4cfca0826e125e6e1e312a53748c2637,{226},{229},,{226},TRUE,"{229, 226}",TRUE,post_claude_results_validation_Nested_Call.pkl
+5,Guess23.sol,0x9f23fa6156c7a845a30c70d4556670852fb16db2,{126},{128},,{126},TRUE,"{128, 126}",TRUE,post_claude_results_validation_Nested_Call.pkl
+6,SkyWay.sol,0x8235cfc3e7d9500b16cdf23ea66979f2d5ab3c74,{105},{107},,{105},TRUE,,FALSE,
+7,BulkSender.sol,0xcf8b99880a5ae950fe2a0b949e69a2e3e9e73c3e,{86},{90},,{86},TRUE,"{90, 86}",TRUE,post_claude_results_validation_Nested_Call.pkl
+8,UnilotTailEther.sol,0x468480af8817914062e1d198eb238e5087896f86,{372},{374},,{372},TRUE,"{446, 442, 374, 372}",TRUE,post_claude_results_validation_Nested_Call.pkl
+9,MultiTransfer.sol,0xb47ba2f58795f87c71403fbcae57a3aee902e175,{33},{34},,{33},TRUE,"{34, 33}",TRUE,post_claude_results_validation_Nested_Call.pkl
+10,MultiSend.sol,0x3d7c33c71996540755f4ae6d7454dea0344f89c0,{35},{36},,{35},TRUE,"{36, 35}",TRUE,post_claude_results_validation_Nested_Call.pkl

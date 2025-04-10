@@ -1,0 +1,9 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,EthVault.sol,0xe78a4ed7a2d50c7206fea45dd7418b71a6de943b,{72},,{72},,False,,False,
+1,PresalePool.sol,0x12365ffbaa6a4387ca536488a8cfbfbfb00b3919,{137},,{137},,False,,False,
+2,ETFplayhouse.sol,0x02b02759c94496a6103c7112606d1b70c055cc58,{160},,{160},,False,,False,
+3,Ambassador.sol,0x85f1752fcaf37c45aa77d677e54e94f533c49874,{228},,{228},,False,,False,
+4,TTLottery.sol,0x48e18ddad6c56062630092ddbd9003704c44acf0,{476},,{476},,False,,False,
+5,Lottery4.sol,0x2044c97717a622b4d9462329db2497e69201623a,{47},,{47},,False,,False,
+6,Lighthouse.sol,0x532975d56cf18f597480e2521246b273ad9ae348,{891},,{891},,False,,False,
+7,Vault.sol,0x65c52ae9b15dd6f30902e9f8164c91e912ee2be3,{35},,{35},,False,,False,

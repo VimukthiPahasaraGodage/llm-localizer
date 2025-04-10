@@ -1,0 +1,9 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,WrapperLockEth.sol,0x9fb2fd4bce3061b826bf1a0b53b737c6f3e0e586,{209},{209},{209},,False,,False,
+1,EthCapsule.sol,0x5274a2293dbe075a82d41e873bb927403a9dce46,{83},{84},{83},,True,{83},True,post_claude_results_test_Timestamp_Dependency.pkl
+2,USTputOption.sol,0x07227ab560609efc6d45d953ee333a76f329a74b,{184},{184},{184},,False,,False,
+3,CNCICO.sol,0x720e794b39f31f0c2746f688c655c7a637f04db4,{238},{238},{238},,False,,False,
+4,ObirumCrowdsale.sol,0x0532dd9ecb00c424c72335df4f60c11c03229ec0,{242},{242},{242},,False,,False,
+5,MonedaICO.sol,0x5ddf3e8cfaa2b1cc1f49a57f78b6c4a982757849,{157},{157},{157},,False,,False,
+6,Crowdsale.sol,0xca4e51d78c1c41032b44923bbfa1bd99bcc194cc,{651},{651},{651},,False,,False,
+7,THE_BANK.sol,0xcb6fe98097fe7d6e00415bb6623d5fc3effa4e83,{20},{20},{20},,False,,False,

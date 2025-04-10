@@ -1,0 +1,2 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,C_bAnK.sol,0x62500ad71aa50744bbd4917d1a64938897e952bf,{22},{24},{22},,True,{22},True,post_claude_results_validation_Reentrancy.pkl

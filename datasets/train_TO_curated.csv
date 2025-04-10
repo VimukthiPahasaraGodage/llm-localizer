@@ -1,0 +1,11 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,NOU.sol,0xe0163cf3bbb7ec64dbc72e9c4f88ed5877fa1bfb,{363},{363},,{363},False,,False,
+1,SimpleTransferRule.sol,0x4226d666079653656f8db5b5b22803525abcb11d,{677},{677},,{677},False,,False,
+2,contracts/Metadata.sol,0x0c255adc32a3fd72a7ef68b8ad18e912ead2c975,{81},{81},,{81},False,,False,
+3,QIUToken.sol,0x37f387fe48c9569500b514a1c7e1f6b04be8d421,{278},{278},,{278},False,,False,
+4,SoccerGamblingV_QIU.sol,0xa8ddbe421894b22e5e5be86d9cf9c24f5600b8fe,{279},{279},,{279},False,,False,
+5,StakingRewards.sol,0x1a300c5a5639c4605c1b47f6e079e8b4056a9376,{114},{114},,{114},False,,False,
+6,Lets_Go_Brandon.sol,0xfac79ae042cbd841a69ab84b16dcd803edccf2a1,{158},{158},,{158},False,,False,
+7,RC.sol,0xd7aa007c3e7ab454ffe3e20f0b28f926db295477,{380},{380},,{380},False,,False,
+8,Multipartner.sol,0xf927b49629dad227bb3cc594359be17372328eda,{185},{185},,{185},False,,False,
+9,RC.sol,0x94e332cc102a02bad6ce2e644ab88f6025bc643f,{380},{380},,{380},False,,False,

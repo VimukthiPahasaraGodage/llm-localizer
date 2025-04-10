@@ -1,0 +1,12 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,CrystalReignShard.sol,0x5108e432d40d34a4d0ed88c12e83db0e571bfc75,{178},,{178},,False,,False,
+1,WithdrawContract.sol,0x0efef0b34638addc8833ba729ae20016b5f24ffc,{302},,{302},,False,,False,
+2,EthCapsule.sol,0x5274a2293dbe075a82d41e873bb927403a9dce46,{56},,{56},,False,,False,
+3,PonziToken.sol,0x33f00114d5aca3dee03189d4ed9d4f886dad84b0,{114},,{114},,False,,False,
+4,USTputOption.sol,0x07227ab560609efc6d45d953ee333a76f329a74b,{297},,{297},,False,,False,
+5,CryptoRomeLandComposableNFT.sol,0x86e4dc25259ee2191cd8ae40e1865b9f0319646c,{1339},,{1339},,False,,False,
+6,DTT_Exchange.sol,0x7abe2a84368af480ffd4beb7676133c30f37dc05,{580},,{580},,False,,False,
+7,FutureDeposit.sol,0xbddd99e8aaeb85847703c31a83277856d49961d9,{39},,{39},,False,,False,
+8,PiggyBank.sol,0x7a0ec191d8f44f3bc3cbb4d1105ced31c30ff492,{7},,{5},,True,"{33, 39}",True,post_claude_results_test_Integer_Overflow_and_Underflow.pkl
+9,TokenTycoonIGO.sol,0xfb673f08fc82807b4d0e139e794e3b328d63551f,{92},,{93},,True,{159},True,post_claude_results_test_Integer_Overflow_and_Underflow.pkl
+10,BEthy.sol,0x248fda6a145642bd9bba9d5d349164e8ffe933cc,{195},,{195},,False,,False,

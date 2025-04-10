@@ -1,0 +1,5 @@
+,file_path,contract_address,soldetector,slither,oyente,smartcheck,need_intervention,claude,claude_complete,pkl_file_path
+0,GetsBurned.sol,0x5f15d2d4c60e229586a5bdfe2eec1981f92845c1,{9},"{8, 9, 10}",,,True,{8},False,post_claude_results_test_Unprotected_Suicide.pkl
+1,PonziToken.sol,0x33f00114d5aca3dee03189d4ed9d4f886dad84b0,{141},"{133, 134, 135, 136, 137, 138, 139, 140, 141, 142}",,,True,{141},True,post_claude_results_test_Unprotected_Suicide.pkl
+2,FutureDeposit.sol,0xbddd99e8aaeb85847703c31a83277856d49961d9,{58},{58},,,False,,False,
+3,PiggyBank.sol,0x7a0ec191d8f44f3bc3cbb4d1105ced31c30ff492,{42},"{38, 39, 40, 41, 42, 43, 44}",,,True,{42},True,post_claude_results_test_Unprotected_Suicide.pkl

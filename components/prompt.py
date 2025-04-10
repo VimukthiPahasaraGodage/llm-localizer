@@ -1,6 +1,9 @@
+import os
 from enum import Enum
 
+import pandas as pd
 import torch
+from tqdm import tqdm
 from transformers import AutoTokenizer
 
 from components.llm_utils import LLMInfo, LLMModels
@@ -28,9 +31,9 @@ class PromptTemplate:
     @staticmethod
     def get_prompt_template_part_1(llm_model: Enum):
         match llm_model:
-            case LLMModels.DEEPSEEK_CODER_V1_BASE_67B:
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B:
                 return PromptTemplate.deepseek_coder_v1_part_1
-            case LLMModels.DEEPSEEK_CODER_V1_BASE_33B:
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
                 return PromptTemplate.deepseek_coder_v1_part_1
             case LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
                 return PromptTemplate.deepseek_coder_v2_part_1
@@ -64,9 +67,9 @@ class PromptTemplate:
     @staticmethod
     def get_prompt_template_part_2(llm_model: Enum):
         match llm_model:
-            case LLMModels.DEEPSEEK_CODER_V1_BASE_67B:
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B:
                 return PromptTemplate.deepseek_coder_v1_part_2
-            case LLMModels.DEEPSEEK_CODER_V1_BASE_33B:
+            case LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
                 return PromptTemplate.deepseek_coder_v1_part_2
             case LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
                 return PromptTemplate.deepseek_coder_v2_part_2
@@ -147,27 +150,32 @@ class Prompt:
             tokenizer_output = tokenizer_output.squeeze()
 
             if self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B or self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
-                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0], 32013)
+                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0].item(), 32013)
                 tokenizer_output = tokenizer_output[1:]
             elif self.llm_model == LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
-                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0], 100000)
+                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0].item(), 100000)
                 tokenizer_output = tokenizer_output[1:]
             elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B:
-                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0], 128000)
+                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0].item(), 128000)
                 tokenizer_output = tokenizer_output[1:]
             elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B or self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_32B:
-                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0], 151646)
+                self.__raise_first_token_mismatch_error_for_deep_seek(tokenizer_output[0].item(), 151646)
                 tokenizer_output = tokenizer_output[1:]
 
+            if tokenizer_output.dim() == 0:
+                tokenizer_output = tokenizer_output.unsqueeze(0)
             tokenized_lines.append(tokenizer_output)  # Append tokenized output of each line
 
         line_split_lengths = []
         total_tokens_in_code = 0
         for line in tokenized_lines:
             if line.dim() != 1:
-                raise Exception("Number of dimensions the tokenized line tensor is not 1.")
+                raise Exception("Number of dimensions of the tokenized line tensor is not 1.")
             line_split_lengths.append(line.shape[0])
             total_tokens_in_code += line.shape[0]
+
+        if len(split_code) != len(line_split_lengths):
+            raise Exception("Number of items in line_split_lengths not equal to number of lines in the code")
 
         tokenized_code = torch.cat(tokenized_lines, dim=0)
         if tokenized_code.shape[0] != total_tokens_in_code:
@@ -189,13 +197,30 @@ class Prompt:
         tokenized_prompt_part_1 = tokenized_prompt_part_1.squeeze()
         tokenized_prompt_part_2 = tokenized_prompt_part_2.squeeze()
 
+        if self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B or self.llm_model == LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_33B:
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1[0].item(), 32013)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2[0].item(), 32013)
+            tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
+        elif self.llm_model == LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B:
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1[0].item(), 100000)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2[0].item(), 100000)
+            tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
+        elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B:
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1[0].item(), 128000)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2[0].item(), 128000)
+            tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
+        elif self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B or self.llm_model == LLMModels.DEEPSEEK_R1_DISTILL_QWEN_32B:
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_1[0].item(), 151646)
+            self.__raise_first_token_mismatch_error_for_deep_seek(tokenized_prompt_part_2[0].item(), 151646)
+            tokenized_prompt_part_2 = tokenized_prompt_part_2[1:]
+
         tokenized_prompt_part_1_length = tokenized_prompt_part_1.shape[0]
         tokenized_prompt_part_2_length = tokenized_prompt_part_2.shape[0]
 
         tokenized_prompt_token_list = [tokenized_prompt_part_1, tokenized_code, tokenized_prompt_part_2]
         tokenized_prompt = torch.cat(tokenized_prompt_token_list, dim=0)
 
-        if tokenized_prompt.dim() != 0 or tokenized_prompt.shape[0] != (
+        if tokenized_prompt.dim() != 1 or tokenized_prompt.shape[0] != (
                 tokenized_prompt_part_1_length + tokenized_prompt_part_2_length + total_tokens_in_code):
             raise Exception("Number of dimensions in tokenized prompt is not 1 or the total number of tokens mismatch!")
 
@@ -233,3 +258,74 @@ class Prompt:
 
     def get_code_end_index(self):
         return self.code_end_index
+
+
+class Driver:
+    def __init__(self, tensor_path: str, dataset_path: str, dataset_version: str, dataset_name: str, llm_model: Enum,
+                 pre_code_part: str, post_code_part: str, standardize_df=False):
+        self.cwd = os.getcwd()
+
+        self.tensor_path = tensor_path
+
+        self.dataset_path = dataset_path
+        self.dataset_version = dataset_version
+        self.dataset_name = dataset_name
+
+        self.pre_code_part = pre_code_part
+        self.post_code_part = post_code_part
+
+        self.df_path = f"{self.cwd}/{self.dataset_path}/{self.dataset_name}/{self.dataset_version}/{self.dataset_name}.csv"
+        if standardize_df:
+            self.standardize_df()
+        self.df = pd.read_csv(self.df_path)
+
+        self.llm_model = llm_model
+        self.llm_info = LLMInfo(self.llm_model)
+
+        # Initialize folders and files for tensors and datasets
+        self.save_path = f'{self.cwd}/{self.tensor_path}/{self.dataset_name}/{self.dataset_version}/{self.llm_model.value}/tokenizer'
+        os.makedirs(self.save_path, exist_ok=True)
+        self.save_path_prompt = f'{self.save_path}/prompt'
+        os.makedirs(self.save_path_prompt, exist_ok=True)
+        self.save_path_code = f'{self.save_path}/code'
+        os.makedirs(self.save_path_code, exist_ok=True)
+
+        self.create_and_save_tensors()
+
+    def standardize_df(self):
+        column_names = ['source_code', 'vuln_lines']
+        df = pd.read_csv(self.df_path, header=None, names=column_names)
+        df['item_index'] = range(0, len(df))  # Starts from 0
+        df = df[['item_index'] + df.columns[:-1].tolist()]  # move 'item_index' column to front
+        df.to_csv(self.df_path, index=False)
+
+    def create_and_save_tensors(self):
+        new_rows = []
+        for index, row in tqdm(self.df.iterrows(), total=len(self.df), desc="Creating tensors for LLM"):
+            try:
+                pt = Prompt(self.pre_code_part, row['source_code'], self.post_code_part, self.llm_model)
+                if pt.prompt_processed:
+                    prompt = pt.get_prompt()
+                    prompt_tokens = pt.get_prompt_tokens()
+                    code_tokens = pt.get_code_tokens()
+                    line_split_lengths = pt.get_line_split_lengths()
+                    code_start_index = pt.get_code_start_index()
+                    code_end_index = pt.get_code_end_index()
+
+                    new_rows.append({'item_index': row['item_index'],
+                                     'line_split_lengths': str(line_split_lengths),
+                                     'code_start_index': code_start_index,
+                                     'code_end_index': code_end_index,
+                                     'prompt_tokens_length': pt.get_prompt_tokens_length(),
+                                     'code_tokens_length': pt.get_code_tokens_length(),
+                                     'line_split_lengths_length': pt.get_line_split_lengths_length(),
+                                     'prompt': prompt})
+
+                    torch.save(prompt_tokens, f'{self.save_path_prompt}/{index}.pt')
+                    torch.save(code_tokens, f'{self.save_path_code}/{index}.pt')
+                else:
+                    print(f"Something wrong. The prompt is not processed!  Index: {row['item_index']}  Dataframe: {self.df_path}")
+            except Exception as e:
+                print(f"Exception occurred for index: {index}.  Error: {e}  Dataframe: {self.df_path}")
+        df = pd.DataFrame(new_rows)
+        df.to_csv(f'{self.save_path}/{self.dataset_name}.csv', index=False)
