@@ -44,6 +44,7 @@ class LLMInfo:
         self.model_name = None
         self.hidden_size = None
         self.context_length = None
+        self.max_allowed_context_length = None
 
         self.define_llm_info()
         self.define_hidden_size_and_context_length()
@@ -52,6 +53,11 @@ class LLMInfo:
         config = AutoConfig.from_pretrained(self.model_name, trust_remote_code=True)
         self.hidden_size = config.hidden_size
         self.context_length = getattr(config, "max_position_embeddings", None)
+
+        if self.context_length < 8192:
+            self.max_allowed_context_length = self.context_length
+        else:
+            self.max_allowed_context_length = 8192
 
     def define_llm_info(self):
         match self.llm_model:

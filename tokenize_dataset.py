@@ -1,16 +1,17 @@
-from enum import Enum
-import pandas as pd
 import os
-from tqdm import tqdm
+from enum import Enum
 
+import pandas as pd
 import torch
+from tqdm import tqdm
 
 from components.llm_utils import LLMInfo, LLMModels
 from components.prompt import Prompt
 
 
 class Driver:
-    def __init__(self, tensor_path: str, dataset_path: str, dataset_version: str, dataset_name: str, llm_model: Enum, pre_code_part: str, post_code_part: str, standardize_df=False):
+    def __init__(self, tensor_path: str, dataset_path: str, dataset_version: str, dataset_name: str, llm_model: Enum,
+                 pre_code_part: str, post_code_part: str, standardize_df=False):
         self.cwd = os.getcwd()
 
         self.tensor_path = tensor_path
@@ -44,7 +45,7 @@ class Driver:
         column_names = ['source_code', 'vuln_lines']
         df = pd.read_csv(self.df_path, header=None, names=column_names)
         df['index'] = range(0, len(df))  # Starts from 0
-        df = df[['index'] + df.columns[:-1].tolist()] # move 'index' column to front
+        df = df[['index'] + df.columns[:-1].tolist()]  # move 'index' column to front
         df.to_csv(self.df_path, index=False)
 
     def create_and_save_tensors(self):
@@ -61,13 +62,13 @@ class Driver:
                     code_end_index = pt.get_code_end_index()
 
                     new_rows.append({'index': index,
-                                 'line_split_lengths': str(line_split_lengths),
-                                 'code_start_index': code_start_index,
-                                 'code_end_index': code_end_index,
-                                 'prompt_tokens_length': pt.get_prompt_tokens_length(),
-                                 'code_tokens_length': pt.get_code_tokens_length(),
-                                 'get_line_split_lengths_length': pt.get_line_split_lengths_length(),
-                                 'prompt': prompt})
+                                     'line_split_lengths': str(line_split_lengths),
+                                     'code_start_index': code_start_index,
+                                     'code_end_index': code_end_index,
+                                     'prompt_tokens_length': pt.get_prompt_tokens_length(),
+                                     'code_tokens_length': pt.get_code_tokens_length(),
+                                     'get_line_split_lengths_length': pt.get_line_split_lengths_length(),
+                                     'prompt': prompt})
 
                     torch.save(prompt_tokens, f'{self.save_path_prompt}/{index}.pt')
                     torch.save(code_tokens, f'{self.save_path_code}/{index}.pt')
@@ -78,49 +79,9 @@ class Driver:
         df = pd.DataFrame(new_rows)
         df.to_csv(f'{self.save_path}/{self.dataset_name}.csv')
 
+
 if __name__ == '__main__':
-    # print("Codegen")
-    # pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
-    # post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
-    # driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.CODEGEN_350M_MULTI, pre_code_part, post_code_part, True)
-
-    # print("\n\nDeepseek Coder v1\n=============================================")
-    # pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
-    # post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
-    # driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_CODER_V1_INSTRUCT_67B, pre_code_part,
-    #                 post_code_part, True)
-
-    print("\n\nDeepseek Coder v2\n=============================================")
     pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
     post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
-    driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_CODER_V2_LITE_INSTRUCT_16B,
-                    pre_code_part,
+    driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.CODEGEN_350M_MULTI, pre_code_part,
                     post_code_part, True)
-
-    print("\n\nQwen Coder\n=============================================")
-    pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
-    post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
-    driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.QWEN_25_CODER_INSTRUCT_GPTQ_INT8_14B,
-                    pre_code_part,
-                    post_code_part, True)
-
-    # print("\n\nDeepseek R1 Qwen\n=============================================")
-    # pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
-    # post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
-    # driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_R1_DISTILL_QWEN_14B,
-    #                 pre_code_part,
-    #                 post_code_part, True)
-    #
-    # print("\n\nQwen Coder\n=============================================")
-    # pre_code_part = "Solidity smart contracts has many vulnerabilities. Some of those vulnerabilities are unprotected suicide, reentrancy, delegate calls, arithmetic overflow/underflow, etc."
-    # post_code_part = "Examine the above solidity smart contract code and identify line that cause these vulnerabilities"
-    # driver = Driver('data/tensors/', 'data/dataset', 'v1', 'solidity', LLMModels.DEEPSEEK_R1_DISTILL_LLAMA_8B,
-    #                 pre_code_part,
-    #                 post_code_part, True)
-
-
-
-
-
-
-

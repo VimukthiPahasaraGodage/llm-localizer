@@ -165,7 +165,7 @@ class Prompt:
         total_tokens_in_code = 0
         for line in tokenized_lines:
             if line.dim() != 1:
-                raise Exception("Number of dimensions the tokenized line tensor is not 1.")
+                raise Exception("Number of dimensions of the tokenized line tensor is not 1.")
             line_split_lengths.append(line.shape[0])
             total_tokens_in_code += line.shape[0]
 
