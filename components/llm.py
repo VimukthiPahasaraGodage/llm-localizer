@@ -77,6 +77,7 @@ class LLM:
             torch.ones(prompt_token_length),
             torch.zeros(self.llm_info.max_allowed_context_length - prompt_token_length)
         ], dim=0).to(self.device)
+        attention_mask = attention_mask.unsqueeze(0)
 
         with torch.no_grad():
             outputs = self.model(input_ids=token_ids, attention_mask=attention_mask, output_hidden_states=True)
