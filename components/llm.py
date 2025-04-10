@@ -59,15 +59,21 @@ class LLM:
                 print(f"There are rows that match the same index in the dataframe! Index: {index}")
                 continue
 
-            prompt_token_length = df_row.iloc[0]['prompt_tokens_length']
+            token_length = 0
+            if self.tokens_type == "prompt":
+                token_length = df_row.iloc[0]['prompt_tokens_length']
+            elif self.tokens_type == "code":
+                token_length = df_row.iloc[0]['code_tokens_length']
+            else:
+                print(f"The token_type is {self.tokens_type} which is not valid!")
 
-            if token_ids.dim() == 1 and token_ids.shape[0] <= self.llm_info.max_allowed_context_length:
+            if token_ids.dim() == 1 and token_ids.shape[0] <= self.llm_info.max_allowed_context_length and token_length > 0:
                 try:
-                    self.__get_last_hidden_states(token_ids, index, prompt_token_length)
+                    self.__get_last_hidden_states(token_ids, index, token_length)
                 except Exception as e:
                     print(f"Exception occurred for index: {index}. Error: {e}")
             else:
-                print(f"The file '{file}' contains a tensor not matching the standards!")
+                print(f"The file '{file}' contains a tensor not matching the standards or token_length is 0!")
 
     def __get_last_hidden_states(self, token_ids: torch.tensor, index: int, prompt_token_length: int):
         token_ids = token_ids.to(self.device)
