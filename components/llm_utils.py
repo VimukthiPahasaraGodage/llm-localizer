@@ -49,7 +49,7 @@ class LLMInfo:
         self.define_hidden_size_and_context_length()
 
     def define_hidden_size_and_context_length(self):
-        config = AutoConfig.from_pretrained(self.model_name)
+        config = AutoConfig.from_pretrained(self.model_name, trust_remote_code=True)
         self.hidden_size = config.hidden_size
         self.context_length = getattr(config, "max_position_embeddings", None)
 
