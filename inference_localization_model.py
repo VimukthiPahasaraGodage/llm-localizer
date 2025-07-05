@@ -82,8 +82,9 @@ class LocalizeVulnerabilities:
         cwd = os.getcwd()
 
         base_model_checkpoint_dir = f"{cwd}/{self.checkpoint_config.outputs_path}/{self.checkpoint_config.dataset_name}/{self.checkpoint_config.dataset_version}/{LLMModels.get_model_nickname(self.checkpoint_config.llm_model)}/{self.checkpoint_config.exp_config}/checkpoints/fold_{self.checkpoint_config.fold_index}"
+        print(base_model_checkpoint_dir)
         if not os.path.isdir(base_model_checkpoint_dir):
-            raise FileNotFoundError("Checkpoint folder does not exist")
+            raise FileNotFoundError(base_model_checkpoint_dir, "Checkpoint folder does not exist")
         base_checkpoint_files = [f for f in os.listdir(base_model_checkpoint_dir) if
                                  os.path.isfile(os.path.join(base_model_checkpoint_dir, f))]
         if len(base_checkpoint_files) > 0:
