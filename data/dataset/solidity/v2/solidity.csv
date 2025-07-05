@@ -15,7 +15,7 @@ item_index,source_code,vuln_lines
  *   CO05: Proxy must exist
  *   CO06: Proxy must be already defined
  *   CO07: Proxy update must be successful
- **/
+ **/source_code
 contract Core is Storage {
   using BytesConvert for bytes;
   modifier onlyProxy {

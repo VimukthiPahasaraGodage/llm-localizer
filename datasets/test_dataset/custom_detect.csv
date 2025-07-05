@@ -1,0 +1,1210 @@
+item_index,source_code,vuln_types
+0,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract Vault {
+    address public admin;
+    uint256 public secret;
+    constructor() {
+        admin = msg.sender;
+        secret = 12345;
+    }
+    function setSecret(uint256 _secret) public {
+        secret = _secret; 
+    }
+    function setAdmin(address _newAdmin) public {
+        admin = _newAdmin; 
+    }
+    function getSecret() public view returns (uint256) {
+        return secret;
+    }
+}","[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+1,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract AdminPanel {
+    address public admin;
+    constructor() {
+        admin = msg.sender;
+    }
+    function changeAdmin(address _newAdmin) public {
+        require(tx.origin == admin, ""Only admin can change""); 
+        admin = _newAdmin;
+    }
+    function execute(bytes memory data, address target) public {
+        require(msg.sender == admin, ""Not admin"");
+        (bool success, ) = target.call(data);
+        require(success, ""Call failed"");
+    }
+}","[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+2,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract Configurable {
+    address public owner;
+    uint256 public rate;
+    constructor() {
+        owner = msg.sender;
+        rate = 100;
+    }
+    function updateRate(uint256 _rate) public {
+        rate = _rate; 
+    }
+    function transferOwnership(address _newOwner) public {
+        require(msg.sender == owner, ""Not owner"");
+        owner = _newOwner;
+    }
+    function getRate() public view returns (uint256) {
+        return rate;
+    }
+}","[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+3,"pragma solidity ^0.4.24;
+/**
+ * @title LotteryGame
+ * @dev A simple lottery that uses block timestamp as source of randomness (vulnerable).
+ */
+contract LotteryGame {
+    address[] public players;
+    address public lastWinner;
+    function enter() public payable {
+        require(msg.value > 0.01 ether);
+        players.push(msg.sender);
+    }
+    function pickWinner() public {
+        require(players.length > 0);
+        uint index = uint(keccak256(abi.encodePacked(block.timestamp, players.length))) % players.length;
+        lastWinner = players[index];
+        lastWinner.transfer(address(this).balance);
+        players = new address ;
+    }
+}","[0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+4,"pragma solidity ^0.4.25;
+/**
+ * @title SimpleDiceRoll
+ * @dev A dice roll game using predictable block properties for randomness.
+ */
+contract SimpleDiceRoll {
+    address public player;
+    uint public roll;
+    function play() public payable {
+        require(msg.value == 0.1 ether);
+        player = msg.sender;
+        uint seed = uint(keccak256(abi.encodePacked(block.difficulty, block.number)));
+        roll = seed % 6 + 1;
+    }
+    function getRoll() public view returns (uint) {
+        return roll;
+    }
+}","[0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+5,"pragma solidity ^0.4.23;
+/**
+ * @title RandomRaffle
+ * @dev A raffle that chooses a winner based on easily manipulated inputs.
+ */
+contract RandomRaffle {
+    address[] public participants;
+    address public winner;
+    function joinRaffle() public payable {
+        require(msg.value >= 0.05 ether);
+        participants.push(msg.sender);
+    }
+    function drawWinner() public {
+        require(participants.length > 0);
+        uint seed = uint(keccak256(abi.encodePacked(msg.sender, block.coinbase, now)));
+        uint winnerIndex = seed % participants.length;
+        winner = participants[winnerIndex];
+        winner.transfer(address(this).balance);
+        delete participants;
+    }
+}","[0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+6,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+// Vulnerability: Unprotected delegatecall in fallback with mutable target
+contract VulnerableContract {
+    address public owner;
+    address public delegateTarget;
+    constructor() {
+        owner = msg.sender;
+    }
+    function setDelegate(address _target) public {
+        delegateTarget = _target; 
+    }
+    fallback() external payable {
+        (bool success, ) = delegateTarget.delegatecall(msg.data);
+        require(success, ""Delegatecall failed"");
+    }
+    function withdraw() public {
+        require(msg.sender == owner, ""Unauthorized"");
+        payable(msg.sender).transfer(address(this).balance);
+    }
+}
+contract AttackContract {
+    address public vulnerableContract;
+    address public attacker;
+    constructor(address _vulnerable) {
+        vulnerableContract = _vulnerable;
+        attacker = msg.sender;
+    }
+    function pwn() public {
+        // Malicious code that will execute in VulnerableContract's context
+        VulnerableContract(vulnerableContract).delegatecall(
+            abi.encodeWithSignature(""updateOwner(address)"", attacker)
+        );
+    }
+    function updateOwner(address _newOwner) public {
+        // This will modify VulnerableContract's storage
+        assembly {
+            sstore(0, _newOwner)
+        }
+    }
+}","[0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+7,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+// Vulnerability: Upgradeable proxy pattern with unprotected initialization
+contract Proxy {
+    address public implementation;
+    address public admin;
+    uint256 public value;
+    constructor(address _implementation) {
+        implementation = _implementation;
+        admin = msg.sender;
+    }
+    function upgradeTo(address _newImplementation) public {
+        implementation = _newImplementation;
+    }
+    fallback() external payable {
+        (bool success, ) = implementation.delegatecall(msg.data);
+        require(success, ""Delegatecall failed"");
+    }
+}
+contract ImplementationV1 {
+    address public owner;
+    uint256 public value;
+    function initialize() public {
+        owner = msg.sender;
+    }
+    function setValue(uint256 _value) public {
+        value = _value;
+    }
+}
+contract AttackImplementation {
+    address public proxy;
+    constructor(address _proxy) {
+        proxy = _proxy;
+    }
+    function hijack() public {
+        // Overwrite proxy's storage slots
+        Proxy(proxy).delegatecall(
+            abi.encodeWithSignature(""initialize()"")
+        );
+        Proxy(proxy).delegatecall(
+            abi.encodeWithSignature(""setValue(uint256)"", address(this).balance)
+        );
+    }
+    receive() external payable {}
+}","[0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+8,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract VulnerableProxy {
+    address public implementation;
+    uint256 public storageSlot;
+    address public owner;
+    constructor(address _implementation) {
+        implementation = _implementation;
+        owner = msg.sender;
+    }
+    function upgradeImplementation(address _newImplementation) public {
+        implementation = _newImplementation; // Line 14: Unprotected update
+    }
+    fallback() external payable {
+        (bool success, ) = implementation.delegatecall(msg.data); // Line 20
+        require(success, ""Delegatecall failed"");
+    }
+}
+contract MaliciousImplementation {
+    // Attackers can manipulate these to match VulnerableProxy's storage layout
+    address public implementation;
+    uint256 public storageSlot;
+    address public owner;
+    function hijackOwnership() public {
+        owner = msg.sender; // Will modify VulnerableProxy's owner slot
+    }
+    function drainFunds() public {
+        payable(owner).transfer(address(this).balance);
+    }
+}","[0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0]"
+9,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract DoSAuctionRefund {
+    address public highestBidder;
+    uint public highestBid;
+    mapping(address => uint) public pendingReturns;
+    function bid() public payable {
+        require(msg.value > highestBid, ""Bid too low"");
+        if (highestBidder != address(0)) {
+            pendingReturns[highestBidder] += highestBid;
+        }
+        highestBidder = msg.sender;
+        highestBid = msg.value;
+    }
+    function refund() public {
+        uint amount = pendingReturns[msg.sender];
+        require(amount > 0, ""No refund"");
+        pendingReturns[msg.sender] = 0;
+        // <yes> <report> DENIAL_OF_SERVICE
+        (bool sent, ) = msg.sender.call{value: amount}(""""); 
+        require(sent, ""Refund failed"");
+    }
+}","[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]"
+10,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract DoSUnboundedLoop {
+    address[] public participants;
+    function join() public {
+        participants.push(msg.sender);
+    }
+    function clear() public {
+        // <yes> <report> DENIAL_OF_SERVICE
+        for (uint i = 0; i < participants.length; i++) { 
+            delete participants[i];
+        }
+        delete participants;
+    }
+}","[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]"
+11,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract DoSLockedFunds {
+    address public winner;
+    uint public prize;
+    bool public claimed = false;
+    function declareWinner(address _winner) public {
+        require(winner == address(0), ""Winner already declared"");
+        winner = _winner;
+    }
+    function depositPrize() public payable {
+        require(prize == 0, ""Prize already funded"");
+        prize = msg.value;
+    }
+    function claimPrize() public {
+        require(msg.sender == winner, ""Not winner"");
+        require(!claimed, ""Already claimed"");
+        claimed = true;
+        // <yes> <report> DENIAL_OF_SERVICE
+        (bool sent, ) = msg.sender.call{value: prize}(""""); 
+        require(sent, ""Transfer failed"");
+    }
+}","[0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0]"
+12,"pragma solidity 0.5.16;
+pragma experimental ABIEncoderV2;
+contract SwapExecutor {
+    address public authorized;
+    struct SwapRequest {
+        address tokenIn;
+        address tokenOut;
+        uint256 amountIn;
+        address payable recipient;
+    }
+    event Executed(address user, address tokenIn, address tokenOut, uint256 amountIn);
+    constructor() public {
+        authorized = msg.sender;
+    }
+    function executeSwap(SwapRequest calldata request) external {
+        require(msg.sender == authorized, ""Unauthorized"");
+        ERC20(request.tokenIn).transferFrom(msg.sender, address(this), request.amountIn);
+        ERC20(request.tokenOut).transfer(request.recipient, request.amountIn);
+        emit Executed(msg.sender, request.tokenIn, request.tokenOut, request.amountIn);
+    }
+}
+interface ERC20 {
+    function transferFrom(address, address, uint256) external returns (bool);
+    function transfer(address, uint256) external returns (bool);
+}","[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0]"
+13,"pragma solidity 0.5.16;
+contract GaslessSwapper {
+    address public owner;
+    mapping(address => bool) public relayers;
+    constructor() public {
+        owner = msg.sender;
+    }
+    modifier onlyRelayer() {
+        require(relayers[msg.sender], ""Not a relayer"");
+        _;
+    }
+    function setRelayer(address relayer, bool status) external {
+        require(msg.sender == owner, ""Not owner"");
+        relayers[relayer] = status;
+    }
+    function gaslessTransfer(
+        address token,
+        address from,
+        address to,
+        uint256 amount
+    ) external onlyRelayer {
+        ERC20(token).transferFrom(from, to, amount);
+    }
+}
+interface ERC20 {
+    function transferFrom(address, address, uint256) external returns (bool);
+}","[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0]"
+14,"pragma solidity 0.5.16;
+contract SimpleTokenBridge {
+    address public bridgeAdmin;
+    constructor() public {
+        bridgeAdmin = msg.sender;
+    }
+    function bridgeTokens(
+        address token,
+        address user,
+        uint256 amount,
+        address destination
+    ) external {
+        require(msg.sender == bridgeAdmin, ""Not admin"");
+        ERC20(token).transferFrom(user, address(this), amount);
+        ERC20(token).transfer(destination, amount);
+    }
+}
+interface ERC20 {
+    function transferFrom(address, address, uint256) external returns (bool);
+    function transfer(address, uint256) external returns (bool);
+}","[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0]"
+15,"// 1. Vulnerable Token Contract (IOU at Line 89)
+pragma solidity ^0.4.24;
+contract UnsafeERC20 {
+    string public name = ""UnsafeToken"";
+    string public symbol = ""UTK"";
+    uint8 public decimals = 18;
+    mapping (address => uint256) public balanceOf;
+    mapping (address => mapping (address => uint256)) public allowance;
+    uint256 public totalSupply;
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    function transfer(address _to, uint256 _value) public returns (bool) {
+        require(_to != address(0));
+        require(balanceOf[msg.sender] >= _value);
+        balanceOf[msg.sender] -= _value;  // Line 15: No underflow check
+        balanceOf[_to] += _value;         // Line 16: No overflow check
+        emit Transfer(msg.sender, _to, _value);
+        return true;
+    }
+    function approve(address _spender, uint256 _value) public returns (bool) {
+        allowance[msg.sender][_spender] = _value;
+        emit Approval(msg.sender, _spender, _value);
+        return true;
+    }
+    function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+        require(_value <= balanceOf[_from]);
+        require(_value <= allowance[_from][msg.sender]);
+        balanceOf[_from] -= _value;  // Line 28: No underflow check
+        balanceOf[_to] += _value;    // Line 29: No overflow check
+        allowance[_from][msg.sender] -= _value;
+        emit Transfer(_from, _to, _value);
+        return true;
+    }
+    function mint(address _to, uint256 _amount) public {
+        totalSupply += _amount;           
+        balanceOf[_to] += _amount;        
+        emit Transfer(address(0), _to, _amount);
+    }
+    function burn(uint256 _amount) public {
+        require(balanceOf[msg.sender] >= _amount);
+        balanceOf[msg.sender] -= _amount; 
+        totalSupply -= _amount;          
+        emit Transfer(msg.sender, address(0), _amount);
+    }
+    // Additional complex logic to reach line count
+    function batchTransfer(address[] _receivers, uint256 _value) public {
+        uint256 total = _value * _receivers.length;  // Line 47: Multiplication overflow risk
+        require(balanceOf[msg.sender] >= total);
+        balanceOf[msg.sender] -= total;
+        for(uint i = 0; i < _receivers.length; i++) {
+            balanceOf[_receivers[i]] += _value;
+            emit Transfer(msg.sender, _receivers[i], _value);
+        }
+    }
+}","[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0]"
+16,"// 2. Vulnerable Crowdsale Contract (IOU at Line 112)
+pragma solidity ^0.4.24;
+contract UnsafeCrowdsale {
+    using SafeMath for uint256;
+    address public owner;
+    uint256 public rate = 1000;
+    uint256 public raisedETH;
+    uint256 public soldTokens;
+    mapping(address => uint256) public contributions;
+    event TokensPurchased(address indexed purchaser, uint256 ethAmount, uint256 tokenAmount);
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+    constructor() public {
+        owner = msg.sender;
+    }
+    function buyTokens() public payable {
+        uint256 tokens = msg.value * rate;  // Line 23: Multiplication overflow risk
+        require(tokens > 0);
+        soldTokens += tokens;              // Line 25: IOU vulnerability
+        raisedETH += msg.value;            // Line 26: No overflow check
+        contributions[msg.sender] += msg.value;
+        emit TokensPurchased(msg.sender, msg.value, tokens);
+    }
+    function withdrawFunds() public onlyOwner {
+        owner.transfer(address(this).balance);
+    }
+    function setRate(uint256 _newRate) public onlyOwner {
+        rate = _newRate;
+    }
+    // Complex dividend distribution with vulnerability
+    function distributeDividends(address[] _holders, uint256 _dividendPerToken) public onlyOwner {
+        uint256 totalDividends = soldTokens * _dividendPerToken;  // Line 40: Multiplication overflow
+        require(address(this).balance >= totalDividends);
+        for(uint i = 0; i < _holders.length; i++) {
+            uint256 holderShare = contributions[_holders[i]] * _dividendPerToken;  // Line 43: Overflow risk
+            _holders[i].transfer(holderShare);
+        }
+    }
+    // Token recovery function with underflow risk
+    function recoverTokens(address _token, uint256 _amount) public onlyOwner {
+        ERC20 token = ERC20(_token);
+        uint256 balance = token.balanceOf(address(this));
+        require(balance >= _amount);
+        token.transfer(owner, balance - _amount);  // Line 51: Potential underflow
+    }
+}
+interface ERC20 {
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address recipient, uint256 amount) external returns (bool);
+}
+library SafeMath {
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        if (a == 0) return 0;
+        uint256 c = a * b;
+        assert(c / a == b);
+        return c;
+    }
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        assert(b <= a);
+        return a - b;
+    }
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        assert(c >= a);
+        return c;
+    }
+}","[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0]"
+17,"// 1. Overflow in Mint Function (Vulnerable Line 27)
+pragma solidity ^0.4.24;
+contract UnsafeToken {
+    mapping(address => uint) public balances;
+    uint public totalSupply;
+    function mint(address _to, uint _amount) public {
+        // Vulnerable multiplication without SafeMath
+        totalSupply += _amount;  // Line 27: Potential overflow
+        balances[_to] += _amount;
+    }
+    function transfer(address _to, uint _value) public {
+        require(balances[msg.sender] >= _value);
+        balances[msg.sender] -= _value;  // Potential underflow
+        balances[_to] += _value;
+    }
+}","[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0]"
+18,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.22;
+import {UUPSUpgradeable} from ""../../proxy/utils/UUPSUpgradeable.sol"";
+import {ERC1967Utils} from ""../../proxy/ERC1967/ERC1967Utils.sol"";
+import {Ownable} from ""@openzeppelin/contracts/access/Ownable.sol"";
+contract SafeUUPSUpgradeable is Ownable, UUPSUpgradeable {
+    uint256 private _value;
+    function getValue() external view returns (uint256) {
+        return _value;
+    }
+    function setValue(uint256 newValue) external {
+        _value = newValue;
+    }
+    // Upgrade authorization restricted to owner only
+    function _authorizeUpgrade(address) internal override onlyOwner {}
+}","[0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]"
+19,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.22;
+import {UUPSUpgradeable} from ""../../proxy/utils/UUPSUpgradeable.sol"";
+import {AccessControl} from ""@openzeppelin/contracts/access/AccessControl.sol"";
+contract RoleBasedUUPS is AccessControl, UUPSUpgradeable {
+    bytes32 public constant UPGRADER_ROLE = keccak256(""UPGRADER_ROLE"");
+    uint256 private _data;
+    constructor() {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(UPGRADER_ROLE, msg.sender);
+    }
+    function getData() external view returns (uint256) {
+        return _data;
+    }
+    function setData(uint256 value) external {
+        _data = value;
+    }
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(UPGRADER_ROLE) {}
+}","[0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]"
+20,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.22;
+import {UUPSUpgradeable} from ""../../proxy/utils/UUPSUpgradeable.sol"";
+import {Initializable} from ""@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol"";
+contract InitializedUUPS is Initializable, UUPSUpgradeable {
+    string private _name;
+    function initialize(string memory name_) public initializer {
+        _name = name_;
+    }
+    function getName() external view returns (string memory) {
+        return _name;
+    }
+    // Simple authorization: only deployer can upgrade
+    address private _owner;
+    function initializeOwner() public initializer {
+        _owner = msg.sender;
+    }
+    function _authorizeUpgrade(address) internal override {
+        require(msg.sender == _owner, ""Unauthorized"");
+    }
+}","[0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0]"
+21,"pragma solidity ^0.4.25;
+contract PaymentSplitter {
+    uint8 public constant decimals = 18;
+    uint256 public constant decimalFactor = 10 ** uint256(decimals);
+    function splitPayment(address addr1, address addr2, uint256 amount) public payable {
+        uint256 half = (amount * decimalFactor) / 2; 
+        addr1.transfer(half);
+        addr2.transfer(half);
+    }
+}","[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0]"
+22,"pragma solidity ^0.4.25;
+contract IncentiveSender {
+    uint8 public constant decimals = 18;
+    uint256 public constant decimalFactor = 10 ** uint256(decimals);
+    function distributeIncentives(address[] _users, uint256 amountPerUser) public payable {
+        for (uint256 i = 0; i < _users.length; i++) {
+            _users[i].transfer(amountPerUser * decimalFactor); 
+        }
+    }
+}","[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0]"
+23,"pragma solidity ^0.4.25;
+contract EtherDistributer {
+    uint8 public constant decimals = 18;
+    uint256 public constant decimalFactor = 10 ** uint256(decimals);
+    function sendEtherToUsers(address[] _recipients, uint256[] _amounts) public payable {
+        require(_recipients.length == _amounts.length, ""Length mismatch"");
+        for (uint256 i = 0; i < _recipients.length; i++) {
+            _recipients[i].transfer(_amounts[i] * decimalFactor); 
+    }
+}","[0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0]"
+24,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+/*
+ * @vulnerable_at_lines: 32
+ */
+contract ArrayDeletionVuln1 {
+    uint[] public myArray = [10, 20, 30, 40, 50];
+    function deleteElement(uint index) external {
+        require(index < myArray.length, ""Invalid index"");
+        delete myArray[index]; 
+    }
+    function getLength() public view returns (uint) {
+        return myArray.length;
+    }
+}","[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0]"
+25,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+/*
+ * @vulnerable_at_lines: 32
+ */
+contract ArrayDeletionVuln2 {
+    address[] public users = [
+        0x1234567890123456789012345678901234567890,
+        0xabcdefabcdefabcdefabcdefabcdefabcdefabcd,
+        0x1111111111111111111111111111111111111111
+    ];
+    function deleteUser(uint index) external {
+        require(index < users.length, ""Invalid index"");
+        delete users[index]; 
+    }
+    function getLength() public view returns (uint) {
+        return users.length;
+    }
+}","[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0]"
+26,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
+/*
+ * @vulnerable_at_lines: 32
+ */
+contract ArrayDeletionVuln3 {
+    struct Item {
+        uint id;
+        string name;
+    }
+    Item[] public items;
+    constructor() {
+        items.push(Item(1, ""Item One""));
+        items.push(Item(2, ""Item Two""));
+        items.push(Item(3, ""Item Three""));
+    }
+    function deleteItem(uint index) external {
+        require(index < items.length, ""Invalid index"");
+        delete items[index]; 
+    }
+    function getLength() public view returns (uint) {
+        return items.length;
+    }
+}","[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0]"
+27,"pragma solidity ^0.4.19;
+contract LegacyBank {
+    mapping(address => uint) public credit;
+    EventLog public eventLogger;
+    bool doneSetup;
+    address admin;
+    function LegacyBank() public {
+        admin = msg.sender;
+    }
+    function initLogger(address loggerAddr) public {
+        require(!doneSetup);
+        eventLogger = EventLog(loggerAddr);
+    }
+    function confirmSetup() public {
+        doneSetup = true;
+    }
+    function receiveEther() public payable {
+        credit[msg.sender] += msg.value;
+        eventLogger.note(msg.sender, msg.value, ""Received"");
+    }
+    function payout(uint val) public {
+        require(credit[msg.sender] >= val);
+        if (msg.sender.call.value(val)()) {       
+            credit[msg.sender] -= val;            
+            eventLogger.note(msg.sender, val, ""Payout"");
+        }
+    }
+    function() public payable {
+        receiveEther();
+    }
+}
+contract EventLog {
+    struct Record {
+        address sender;
+        uint amount;
+        string activity;
+        uint timestamp;
+    }
+    Record[] public logs;
+    function note(address sender, uint amount, string activity) public {
+        logs.push(Record(sender, amount, activity, now));
+    }
+}
+pragma solidity ^0.4.19;
+contract LegacyBank {
+    mapping(address => uint) public credit;
+    EventLog public eventLogger;
+    bool doneSetup;
+    address admin;
+    function LegacyBank() public {
+        admin = msg.sender;
+    }
+    function initLogger(address loggerAddr) public {
+        require(!doneSetup);
+        eventLogger = EventLog(loggerAddr);
+    }
+    function confirmSetup() public {
+        doneSetup = true;
+    }
+    function receiveEther() public payable {
+        credit[msg.sender] += msg.value;
+        eventLogger.note(msg.sender, msg.value, ""Received"");
+    }
+    function payout(uint val) public {
+        require(credit[msg.sender] >= val);
+        if (msg.sender.call.value(val)()) {       
+            credit[msg.sender] -= val;            
+            eventLogger.note(msg.sender, val, ""Payout"");
+        }
+    }
+    function() public payable {
+        receiveEther();
+    }
+}
+contract EventLog {
+    struct Record {
+        address sender;
+        uint amount;
+        string activity;
+        uint timestamp;
+    }
+    Record[] public logs;
+    function note(address sender, uint amount, string activity) public {
+        logs.push(Record(sender, amount, activity, now));
+    }
+}","[0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0]"
+28,"pragma solidity ^0.4.19;
+contract Vault {
+    mapping(address => uint) public balances;
+    LogFile Log;
+    bool initialized;
+    function setLog(address _log) public {
+        if (initialized) revert();
+        Log = LogFile(_log);
+    }
+    function init() public {
+        initialized = true;
+    }
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+        Log.add(msg.sender, msg.value, ""Deposit"");
+    }
+    function withdraw(uint amount) public {
+        if (balances[msg.sender] >= amount) {
+            if (msg.sender.call.value(amount)()) { 
+                balances[msg.sender] -= amount;    
+                Log.add(msg.sender, amount, ""Withdraw"");
+            }
+        }
+    }
+    function() public payable {
+        deposit();
+    }
+}
+contract LogFile {
+    struct Entry {
+        address sender;
+        string message;
+        uint val;
+        uint time;
+    }
+    Entry[] public logs;
+    Entry temp;
+    function add(address user, uint val, string msgText) public {
+        temp.sender = user;
+        temp.val = val;
+        temp.message = msgText;
+        temp.time = now;
+        logs.push(temp);
+    }
+}","[0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0]"
+29,"pragma solidity ^0.4.19;
+contract ReentrancyPlus {
+    mapping(address => uint) public savings;
+    address public admin;
+    Logger public log;
+    bool locked;
+    struct User {
+        uint totalDeposits;
+        uint lastWithdrawal;
+    }
+    mapping(address => User) public userInfo;
+    function ReentrancyPlus() public {
+        admin = msg.sender;
+    }
+    function setup(address _log) public {
+        if (locked) revert();
+        log = Logger(_log);
+    }
+    function enable() public {
+        locked = true;
+    }
+    function depositFunds() public payable {
+        savings[msg.sender] += msg.value;
+        userInfo[msg.sender].totalDeposits += msg.value;
+        log.logEvent(msg.sender, msg.value, ""Deposit"");
+    }
+    function withdrawFunds(uint amount) public {
+        require(savings[msg.sender] >= amount);
+        if (msg.sender.call.value(amount)()) {    
+            savings[msg.sender] -= amount;       
+            userInfo[msg.sender].lastWithdrawal = now;
+            log.logEvent(msg.sender, amount, ""Withdraw"");
+        }
+    }
+    function() public payable {
+        depositFunds();
+    }
+}
+contract Logger {
+    struct Entry {
+        address user;
+        uint val;
+        string action;
+        uint timestamp;
+    }
+    Entry[] public records;
+    function logEvent(address u, uint v, string act) public {
+        records.push(Entry(u, v, act, now));
+    }
+}","[0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0]"
+30,"pragma solidity ^0.4.11;
+contract LoyaltyToken {
+    mapping(address => uint) public points;
+    address public admin;
+    event PointsTransferred(address indexed from, address indexed to, uint value);
+    function LoyaltyToken() public {
+        admin = msg.sender;
+        points[admin] = 50000;
+    }
+    function transferPoints(address recipient, uint value) public returns (bool) {
+        if (points[msg.sender] < value) return false;
+        points[msg.sender] -= value;
+        points[recipient] += value;
+        PointsTransferred(msg.sender, recipient, value);
+        return true;
+    }
+    function balanceOf(address owner) public view returns (uint) {
+        return points[owner];
+    }
+}","[0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0]"
+31,"pragma solidity ^0.4.11;
+contract DigitalWallet {
+    mapping(address => uint256) private balances;
+    address public creator;
+    event FundsMoved(address indexed from, address indexed to, uint256 value);
+    function DigitalWallet() public {
+        creator = msg.sender;
+        balances[creator] = 100000;
+    }
+    function moveFunds(address receiver, uint256 amount) public returns (bool) {
+        if (balances[msg.sender] < amount) return false;
+        balances[msg.sender] -= amount;
+        balances[receiver] += amount;
+        FundsMoved(msg.sender, receiver, amount);
+        return true;
+    }
+    function viewBalance(address user) public view returns (uint256) {
+        return balances[user];
+    }
+}","[0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0]"
+32,"pragma solidity ^0.4.11;
+contract GameCredits {
+    mapping(address => uint256) public credits;
+    address public gameOwner;
+    event CreditTransfer(address indexed player, address indexed recipient, uint256 creditsTransferred);
+    function GameCredits() public {
+        gameOwner = msg.sender;
+        credits[gameOwner] = 20000;
+    }
+    function transferCredits(address player, uint256 creditAmount) public returns (bool) {
+        if (credits[msg.sender] < creditAmount) return false;
+        credits[msg.sender] -= creditAmount;
+        credits[player] += creditAmount;
+        CreditTransfer(msg.sender, player, creditAmount);
+        return true;
+    }
+    function creditOf(address player) public view returns (uint256) {
+        return credits[player];
+    }
+}","[0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0]"
+33,"pragma solidity ^0.4.16;
+contract TD_Vuln1 {
+    uint public deadline;
+    address public owner;
+    constructor(uint _durationMinutes) public {
+        owner = msg.sender;
+        deadline = now + (_durationMinutes * 1 minutes); 
+    }
+    modifier onlyBeforeDeadline() {
+        require(now <= deadline);  
+        _;
+    }
+    function bid() public payable onlyBeforeDeadline {
+        // Accept bids before deadline
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0]"
+34," pragma solidity ^0.4.26;
+ contract TD_Vuln3 {
+     uint public startTime;
+     uint public bonusEnd;
+     constructor() public {
+         startTime = now;
+         bonusEnd = now + 1 weeks;
+     }
+     function getTokenPrice() public view returns (uint) {
+         if (now <= bonusEnd) {
+             return 90; // bonus price
+        } else {
+            return 100; // normal price
+        }
+     }
+ }","[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0]"
+35,"pragma solidity ^0.4.19;
+contract ReentrancyPlus {
+    mapping(address => uint) public savings;
+    address public admin;
+    Logger public log;
+    bool locked;
+    struct User {
+        uint totalDeposits;
+        uint lastWithdrawal;
+    }
+    mapping(address => User) public userInfo;
+    function ReentrancyPlus() public {
+        admin = msg.sender;
+    }
+    function setup(address _log) public {
+        if (locked) revert();
+        log = Logger(_log);
+    }
+    function enable() public {
+        locked = true;
+    }
+    function depositFunds() public payable {
+        savings[msg.sender] += msg.value;
+        userInfo[msg.sender].totalDeposits += msg.value;
+        log.logEvent(msg.sender, msg.value, ""Deposit"");
+    }
+    function withdrawFunds(uint amount) public {
+        require(savings[msg.sender] >= amount);
+        if (msg.sender.call.value(amount)()) {    
+            savings[msg.sender] -= amount;       
+            userInfo[msg.sender].lastWithdrawal = now;
+            log.logEvent(msg.sender, amount, ""Withdraw"");
+        }
+    }
+    function() public payable {
+        depositFunds();
+    }
+}
+contract Logger {
+    struct Entry {
+        address user;
+        uint val;
+        string action;
+        uint timestamp;
+    }
+    Entry[] public records;
+    function logEvent(address u, uint v, string act) public {
+        records.push(Entry(u, v, act, now));
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0]"
+36,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract TimeBasedBetting {
+    address public owner;
+    uint256 public prizePool;
+    constructor() {
+        owner = msg.sender;
+        prizePool = 0;
+    }
+    function placeBet() public payable {
+        require(msg.value == 1 ether, ""Must send 1 ETH"");
+        prizePool += msg.value;
+        uint256 luckyNumber = uint256(keccak256(abi.encodePacked(block.timestamp))) % 10; 
+        if (luckyNumber == 7) {
+            payable(msg.sender).transfer(prizePool);
+            prizePool = 0;
+        }
+    }
+    function getPrizePool() public view returns (uint256) {
+        return prizePool;
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0]"
+37,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract BonusGiver {
+    mapping(address => uint256) public bonuses;
+    function claimBonus() public {
+        if (block.timestamp % 2 == 0) { 
+            bonuses[msg.sender] += 1 ether;
+        }
+    }
+    function withdrawBonus() public {
+        uint256 amount = bonuses[msg.sender];
+        require(amount > 0, ""No bonus"");
+        bonuses[msg.sender] = 0;
+        payable(msg.sender).transfer(amount);
+    }
+    receive() external payable {}
+}","[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0]"
+38,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract TimedAuction {
+    address public highestBidder;
+    uint256 public highestBid;
+    uint256 public endTime;
+    constructor(uint256 _biddingTime) {
+        endTime = block.timestamp + _biddingTime;
+    }
+    function bid() public payable {
+        require(block.timestamp < endTime, ""Auction ended""); 
+        require(msg.value > highestBid, ""Bid too low"");
+        if (highestBid > 0) {
+            payable(highestBidder).transfer(highestBid);
+        }
+        highestBidder = msg.sender;
+        highestBid = msg.value;
+    }
+    function getRemainingTime() public view returns (uint256) {
+        return endTime > block.timestamp ? endTime - block.timestamp : 0;
+    }
+    receive() external payable {}
+}","[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0]"
+39,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract ReentrancyRewards {
+    mapping(address => uint256) public rewards;
+    constructor() {
+        rewards[msg.sender] = 10 ether;
+    }
+    function depositReward(address user, uint256 amount) public {
+        rewards[user] += amount;
+    }
+    function claimReward() public {
+        uint256 reward = rewards[msg.sender];
+        require(reward > 0, ""No reward"");
+        (bool sent, ) = msg.sender.call{value: reward}(""""); 
+        require(sent, ""Transfer failed"");
+        rewards[msg.sender] = 0; 
+    }
+    receive() external payable {}
+}","[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0]"
+40,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract Auction {
+    address public highestBidder;
+    uint256 public highestBid;
+    uint256 public deadline;
+    constructor(uint256 _durationInSeconds) {
+        deadline = block.timestamp + _durationInSeconds;
+    }
+    function bid() public payable {
+        require(block.timestamp < deadline, ""Auction ended""); 
+        require(msg.value > highestBid, ""Bid too low"");
+        if (highestBidder != address(0)) {
+            payable(highestBidder).transfer(highestBid);
+        }
+        highestBidder = msg.sender;
+        highestBid = msg.value;
+    }
+    function getTimeLeft() public view returns (uint256) {
+        return deadline > block.timestamp ? deadline - block.timestamp : 0;
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0]"
+41,"// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+contract SimpleOwnership {
+    address public owner;
+    address public nominatedOwner;
+    constructor() {
+        owner = msg.sender;
+    }
+    function nominateNewOwner(address _newOwner) public {
+        require(msg.sender == owner, ""Not owner"");
+        nominatedOwner = _newOwner;
+    }
+    function acceptOwnership() public {
+        require(tx.origin == nominatedOwner, ""Not nominated""); 
+        owner = nominatedOwner;
+        nominatedOwner = address(0);
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0]"
+42,"pragma solidity ^0.4.18;
+contract TokenDistributor {
+    function TokenDistributor() public {}
+    modifier onlyValid(address addr) {
+        require(addr != address(0));
+        require(addr != address(this));
+        _;
+    }
+    function distributeTokens(address tokenContract, address[] recipients, uint256[] values)
+        public
+        onlyValid(tokenContract)
+        returns (bool)
+    {
+        require(recipients.length > 0);
+        require(values.length > 0);
+        require(recipients.length == values.length);
+        bytes4 methodId = bytes4(keccak256(""transferFrom(address,address,uint256)""));
+        for (uint i = 0; i < recipients.length; i++) {
+            tokenContract.call(methodId, msg.sender, recipients[i], values[i]);
+        }
+        return true;
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]"
+43,"pragma solidity ^0.4.18;
+contract BulkSender {
+    function BulkSender() public {}
+    modifier ensure(address a) {
+        require(a != 0x0 && a != address(this));
+        _;
+    }
+    function sendToMany(address token, address[] toList, uint256[] amounts)
+        public
+        ensure(token)
+        returns (bool)
+    {
+        require(toList.length == amounts.length);
+        bytes4 sig = bytes4(keccak256(""transferFrom(address,address,uint256)""));
+        for (uint i = 0; i < toList.length; i++) {
+            token.call(sig, msg.sender, toList[i], amounts[i]);
+        }
+        return true;
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]"
+44,"pragma solidity ^0.4.18;
+contract AirdropExecutor {
+    function AirdropExecutor() public {}
+    modifier notSelf(address a) {
+        require(a != 0x0 && a != address(this));
+        _;
+    }
+    function executeAirdrop(address tokenAddr, address[] beneficiaries, uint256[] tokenAmounts)
+        public
+        notSelf(tokenAddr)
+        returns (bool)
+    {
+        require(beneficiaries.length == tokenAmounts.length && beneficiaries.length > 0);
+        bytes4 fnSig = bytes4(keccak256(""transferFrom(address,address,uint256)""));
+        for (uint i = 0; i < beneficiaries.length; i++) {
+            tokenAddr.call(fnSig, msg.sender, beneficiaries[i], tokenAmounts[i]);
+        }
+        return true;
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]"
+45,"pragma solidity ^0.4.18;
+contract SimpleTokenWithDestruct {
+    mapping(address => uint256) public balances;
+    address public owner;
+    function SimpleTokenWithDestruct() public {
+        owner = msg.sender;
+        balances[owner] = 1000;
+    }
+    function transfer(address to, uint256 amount) public {
+        require(balances[msg.sender] >= amount);
+        balances[msg.sender] -= amount;
+        balances[to] += amount;
+    }
+    function kill() public {
+        selfdestruct(owner);
+    }
+    function balanceOf(address addr) public view returns (uint256) {
+        return balances[addr];
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]"
+46,"pragma solidity ^0.4.18;
+contract CrowdsaleWithKill {
+    address public owner;
+    uint256 public rate;
+    mapping(address => uint256) public contributions;
+    function CrowdsaleWithKill() public {
+        owner = msg.sender;
+        rate = 100;
+    }
+    function buyTokens() public payable {
+        contributions[msg.sender] += msg.value * rate;
+    }
+    function destroyContract() public {
+        selfdestruct(owner);
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]"
+47,"pragma solidity ^0.4.18;
+contract VotingWithSelfDestruct {
+    mapping(address => bool) public voted;
+    uint256 public votesFor;
+    address public owner;
+    function VotingWithSelfDestruct() public {
+        owner = msg.sender;
+    }
+    function vote() public {
+        require(!voted[msg.sender]);
+        voted[msg.sender] = true;
+        votesFor++;
+    }
+    function endVoting() public {
+        selfdestruct(owner);
+    }
+}","[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]"
